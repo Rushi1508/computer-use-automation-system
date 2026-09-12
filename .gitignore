@@ -1,0 +1,44 @@
+# --- Secrets -----------------------------------------------------------------
+# .env.example IS committed; real env files never are.
+.env
+.env.*
+!.env.example
+
+# --- Raw run output ----------------------------------------------------------
+# The evidence bus writes unredacted run output here: full DOM snapshots,
+# Playwright traces, screenshots, raw model transcripts. It may contain
+# credentials, tokens, and PII, so it is never committed.
+#
+# Curated, redacted bundles are promoted into /evidence/, which IS committed
+# as a deliverable. See src/evidence/ for the promote step.
+.runs/
+
+# --- Dependencies & build ----------------------------------------------------
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+
+# --- Playwright --------------------------------------------------------------
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+.cache/
+
+# --- Editor & OS -------------------------------------------------------------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Local tooling -----------------------------------------------------------
+.claude/settings.local.json
+*.log
+npm-debug.log*
+
+# --- Assignment brief --------------------------------------------------------
+# interface.ai's take-home document. Kept locally for reference, not published
+# to a public repo — it is their material to distribute, not ours.
+docs/
