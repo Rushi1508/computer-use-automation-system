@@ -6,87 +6,93 @@
   "capabilityId": "lookup_member_savings_balance",
   "capabilityVersion": 1,
   "runId": "05-recovered-maintenance-interstitial",
-  "entrypoint": "http://127.0.0.1:58775/",
-  "startedAt": "2026-09-12T19:49:48.323Z",
-  "elapsedMs": 4645,
+  "entrypoint": "http://127.0.0.1:56729/",
+  "startedAt": "2026-09-12T20:32:20.390Z",
+  "elapsedMs": 2092,
   "steps": [
     {
       "index": 0,
       "action": "fill",
       "intent": "Enter operator ID to sign on",
-      "durationMs": 412,
+      "durationMs": 122,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
         "rank": 0,
         "confidence": 0.95
       },
-      "reauthentication": "[REDACTED]"
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
     },
     {
       "index": 1,
       "action": "fill",
       "intent": "Enter password to sign on",
-      "durationMs": 219,
+      "durationMs": 65,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
         "rank": 0,
         "confidence": 0.95
       },
-      "reauthentication": "[REDACTED]"
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
     },
     {
       "index": 2,
       "action": "click",
       "intent": "Submit credentials to sign on",
-      "durationMs": 895,
+      "durationMs": 481,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
         "rank": 0,
         "confidence": 0.95
       },
-      "reauthentication": "[REDACTED]"
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
     },
     {
       "index": 3,
       "action": "fill",
       "intent": "Enter member ID to look up",
-      "durationMs": 1020,
+      "durationMs": 451,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
         "rank": 0,
         "confidence": 0.95
       },
-      "reauthentication": "[REDACTED]"
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
     },
     {
       "index": 4,
       "action": "click",
       "intent": "Search for member {memberId}",
-      "durationMs": 776,
+      "durationMs": 408,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
         "rank": 0,
         "confidence": 0.95
       },
-      "reauthentication": "[REDACTED]"
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
     },
     {
       "index": 5,
       "action": "read",
       "intent": "Capture the savings account balance requested by the goal",
-      "durationMs": 765,
+      "durationMs": 217,
       "polls": 0,
       "resolvedBy": {
         "kind": "grid_cell",
         "rank": 0,
         "confidence": 0.92
       },
-      "reauthentication": "[REDACTED]"
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
     }
   ],
   "recoveries": [
@@ -98,5 +104,6 @@
       "detail": "clicked the Continue button on the maintenance notice"
     }
   ],
-  "drift": []
+  "drift": [],
+  "interventions": []
 }

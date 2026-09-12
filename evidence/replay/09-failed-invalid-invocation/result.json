@@ -12,10 +12,11 @@
   "capabilityId": "lookup_member_savings_balance",
   "capabilityVersion": 1,
   "runId": "09-failed-invalid-invocation",
-  "entrypoint": "http://127.0.0.1:58775/",
-  "startedAt": "2026-09-12T19:50:12.560Z",
-  "elapsedMs": 3,
+  "entrypoint": "http://127.0.0.1:56729/",
+  "startedAt": "2026-09-12T20:32:33.027Z",
+  "elapsedMs": 1,
   "steps": [],
   "recoveries": [],
-  "drift": []
+  "drift": [],
+  "interventions": []
 }

@@ -1,0 +1,169 @@
+{
+  "status": "succeeded",
+  "outputs": {
+    "newAccountNumber": "0009-4000"
+  },
+  "capabilityId": "open_sub_account",
+  "capabilityVersion": 1,
+  "runId": "02-operator-approves-irreversible-step",
+  "entrypoint": "http://127.0.0.1:64026/",
+  "startedAt": "2026-09-12T20:31:37.961Z",
+  "elapsedMs": 3300,
+  "steps": [
+    {
+      "index": 0,
+      "action": "fill",
+      "intent": "Enter the operator ID to sign on",
+      "durationMs": 130,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    },
+    {
+      "index": 1,
+      "action": "fill",
+      "intent": "Enter the password to sign on",
+      "durationMs": 67,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    },
+    {
+      "index": 2,
+      "action": "click",
+      "intent": "Submit the sign-on form",
+      "durationMs": 486,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    },
+    {
+      "index": 3,
+      "action": "fill",
+      "intent": "Enter the member ID to look up",
+      "durationMs": 106,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    },
+    {
+      "index": 4,
+      "action": "click",
+      "intent": "Search for the member",
+      "durationMs": 429,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    },
+    {
+      "index": 5,
+      "action": "click",
+      "intent": "Open the sub-account form for this member",
+      "durationMs": 457,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    },
+    {
+      "index": 6,
+      "action": "select",
+      "intent": "Choose the account type",
+      "durationMs": 112,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    },
+    {
+      "index": 7,
+      "action": "fill",
+      "intent": "Enter the initial deposit",
+      "durationMs": 112,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "anchored_row",
+        "rank": 0,
+        "confidence": 0.85
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    },
+    {
+      "index": 8,
+      "action": "click",
+      "intent": "Open the account",
+      "durationMs": 928,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    },
+    {
+      "index": 9,
+      "action": "read",
+      "intent": "Read the new account number from the confirmation",
+      "durationMs": 134,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "anchored_row",
+        "rank": 0,
+        "confidence": 0.85
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    }
+  ],
+  "recoveries": [],
+  "drift": [],
+  "interventions": [
+    {
+      "id": "int-001",
+      "reason": "risky-irreversible",
+      "reasonKind": "confirmation_required",
+      "stepIndex": 8,
+      "operator": "operator-sam",
+      "resolution": "approve",
+      "note": "Checked the form before approving: Savings account, deposit 500.00.",
+      "operatorActions": 0,
+      "pausedMs": 434
+    }
+  ]
+}

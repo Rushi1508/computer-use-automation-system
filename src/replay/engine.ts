@@ -13,27 +13,45 @@
  *   failure            Anything else. Stops the run with the step, what was
  *                      expected, what was actually on screen, and a screenshot.
  *
+ * When an escalation handler is supplied, two things change and nothing else
+ * does. A failure a person could fix is offered to a person before it ends the
+ * run, and an irreversible step in an unapproved capability waits for a
+ * person's decision instead of being refused outright. Either way the person
+ * works on this same session, and replay picks up from where they leave it —
+ * re-locating its target first, because a person's view of the screen is not
+ * automation's.
+ *
  * Determinism comes mostly from what replay refuses to do. It never guesses
  * between two matching elements, never sleeps a fixed time and hopes, never
  * retries an irreversible step, never re-runs a flow past an irreversible step
- * to recover a session, and never treats "the click succeeded" as evidence
- * that the application did what was intended.
+ * to recover a session, and never treats "the click succeeded" as evidence that
+ * the application did what was intended.
  *
  * It depends only on the Surface interface and on Observations, so it runs
  * unchanged against any surface that produces them.
  */
 
 import type { EvidenceBus } from "../evidence/bus.js";
+import {
+  type EscalationHandler,
+  type EscalationOutcome,
+  type EscalationReason,
+  type InterventionRecord,
+  recordOf,
+  type ResolutionKind,
+} from "../escalation/types.js";
 import { detectorHolds, resolveTarget, screenText } from "../locator/match.js";
 import type { Action, Observation, ObservedElement, Surface } from "../perception/types.js";
 import { type ConfirmHandler, denyByDefault } from "../policy/confirm.js";
 import type { PolicyEngine } from "../policy/engine.js";
 import { redactor } from "../policy/redactor.js";
+import type { PolicyDecision } from "../policy/types.js";
 import { type AppProfile, appProfile } from "../schema/app-profile.js";
 import type { Capability, Detector, Step, Strategy, Target } from "../schema/capability.js";
 
 const DEFAULT_STEP_TIMEOUT_MS = 10_000;
 const DEFAULT_POLL_MS = 250;
+const DEFAULT_MAX_ESCALATIONS = 3;
 /** A wait for a target longer than this is recorded as an absorbed transient load. */
 const SLOW_RENDER_THRESHOLD_MS = 1_500;
 
@@ -49,7 +67,8 @@ export type FailureKind =
   | "output_empty"
   | "application_error"
   | "recovery_exhausted"
-  | "unsafe_to_recover";
+  | "unsafe_to_recover"
+  | "operator_aborted";
 
 export interface ReplayFailure {
   readonly kind: FailureKind;
@@ -61,8 +80,8 @@ export interface ReplayFailure {
   readonly observed: string;
   /**
    * Whether a person taking over the live session could plausibly finish.
-   * False for things a human should not override — a policy denial, a
-   * malformed invocation. This is what the escalation path keys on.
+   * False for things a person should not override — a policy denial, a
+   * malformed invocation, a decision a person already made.
    */
   readonly escalatable: boolean;
   readonly evidence: { readonly screenshot?: string; readonly tree?: string };
@@ -81,6 +100,8 @@ export interface StepRecord {
   };
   /** True when the step ran as part of recovering an expired session. */
   readonly reauthentication: boolean;
+  /** An operator may complete a step by hand during a handoff. The record says so. */
+  readonly completedBy: "automation" | "operator";
 }
 
 export interface RecoveryRecord {
@@ -118,6 +139,7 @@ interface RunSummary {
   readonly steps: readonly StepRecord[];
   readonly recoveries: readonly RecoveryRecord[];
   readonly drift: readonly DriftRecord[];
+  readonly interventions: readonly InterventionRecord[];
 }
 
 type Terminal =
@@ -148,7 +170,12 @@ export interface ReplayOptions {
    * instance, or a test server, by supplying that instance's URL here.
    */
   readonly entrypoint?: string;
+  /** Used for irreversible steps when no escalation handler is present. */
   readonly onConfirm?: ConfirmHandler;
+  /** Brings a person into the run for fixable failures and irreversible steps. */
+  readonly escalation?: EscalationHandler;
+  /** Upper bound on handoffs per run, so a flow that keeps breaking stops asking. */
+  readonly maxEscalations?: number;
   readonly stepTimeoutMs?: number;
   readonly pollMs?: number;
   readonly profile?: AppProfile;
@@ -218,6 +245,8 @@ interface Config {
   readonly evidence: EvidenceBus;
   readonly entrypoint: string;
   readonly onConfirm: ConfirmHandler;
+  readonly escalation: EscalationHandler | undefined;
+  readonly maxEscalations: number;
   readonly stepTimeoutMs: number;
   readonly pollMs: number;
   readonly profile: AppProfile;
@@ -235,10 +264,12 @@ class ReplayRun {
   readonly #steps: StepRecord[] = [];
   readonly #recoveries: RecoveryRecord[] = [];
   readonly #drift: DriftRecord[] = [];
+  readonly #interventions: InterventionRecord[] = [];
   readonly #outputs: Record<string, string> = {};
   readonly #attempts = new Map<string, number>();
   #riskyExecuted = false;
   #reauthenticating = false;
+  #escalations = 0;
   #last: Observation | null = null;
 
   constructor(config: Config) {
@@ -251,6 +282,7 @@ class ReplayRun {
     evidence.emit("run.start", `Replay of ${capability.id} v${capability.version}`, {
       entrypoint: this.#c.entrypoint,
       approvalState: capability.approvalState,
+      escalation: this.#c.escalation !== undefined,
       inputs: Object.fromEntries(
         capability.inputs.map((i) => [i.name, i.sensitivity === "secret" ? "[secret]" : (inputs[i.name] ?? null)]),
       ),
@@ -294,11 +326,27 @@ class ReplayRun {
             index = error.resumeAt;
             continue;
           }
+          const next = await this.#handOff(error, step);
+          if (next === "retry") continue;
+          if (next === "advance") {
+            index++;
+            continue;
+          }
           throw error;
         }
       }
 
-      await this.#verifySuccess();
+      for (;;) {
+        try {
+          await this.#verifySuccess();
+          break;
+        } catch (error) {
+          const next = await this.#handOff(error, null);
+          if (next === "retry") continue;
+          if (next === "advance") break;
+          throw error;
+        }
+      }
 
       const missing = capability.outputs.filter((o) => (this.#outputs[o.name] ?? "") === "");
       if (missing.length > 0) {
@@ -330,7 +378,7 @@ class ReplayRun {
   }
 
   async #execute(step: Step): Promise<void> {
-    const { capability, surface, policy, evidence, onConfirm } = this.#c;
+    const { capability, surface, policy, evidence } = this.#c;
     const began = Date.now();
     evidence.emit("action.start", `Step ${step.index}: ${step.action}`, {
       intent: step.intent,
@@ -375,10 +423,12 @@ class ReplayRun {
       throw await this.#fail("policy_denied", step, `permission to ${step.action} ${target.description}`, false, decision.reason);
     }
     if (decision.verdict === "confirm") {
-      const granted = await onConfirm(decision, action, located.element);
-      evidence.emit("policy.decision", `Confirmation ${granted ? "granted" : "refused"}`, { rule: decision.rule });
-      if (!granted) {
-        throw await this.#fail("confirmation_refused", step, `a person to approve: ${decision.reason}`, true, "confirmation was not granted");
+      const involvedPerson = await this.#confirm(step, target, decision, action, located.element);
+      if (involvedPerson) {
+        // The person may have looked at or changed the screen, which
+        // invalidates node ids. Find the target again before acting on it.
+        located = await this.#locate(step, target);
+        action = this.#action(step, located.element);
       }
     }
 
@@ -422,6 +472,143 @@ class ReplayRun {
     }
 
     this.#record(step, began, located.polls, located.resolvedBy);
+  }
+
+  /**
+   * Gets a decision on an irreversible step.
+   *
+   * Returns true when a person was involved, which means the screen has to be
+   * looked at again before acting. Throws when the answer is no.
+   */
+  async #confirm(
+    step: Step,
+    target: Target,
+    decision: PolicyDecision,
+    action: Action,
+    element: ObservedElement,
+  ): Promise<boolean> {
+    const { escalation, onConfirm, evidence } = this.#c;
+
+    if (escalation === undefined) {
+      const granted = await onConfirm(decision, action, element);
+      evidence.emit("policy.decision", `Confirmation ${granted ? "granted" : "refused"}`, { rule: decision.rule });
+      if (!granted) {
+        throw await this.#fail("confirmation_refused", step, `a person to approve: ${decision.reason}`, true, "confirmation was not granted");
+      }
+      return false;
+    }
+
+    const outcome = await this.#raise(
+      step,
+      { kind: "confirmation_required", code: decision.rule, detail: decision.reason },
+      `approval to ${step.action} ${target.description}`,
+      ["approve", "reject", "abort"],
+    );
+    if (outcome.resolution.kind === "approve") return true;
+
+    // A person made this decision; it is not something to escalate again.
+    const who = `operator ${outcome.operator ?? "unknown"}`;
+    const note = outcome.note !== "" ? outcome.note : "no note";
+    const aborted = outcome.resolution.kind === "abort";
+    throw await this.#fail(
+      aborted ? "operator_aborted" : "confirmation_refused",
+      step,
+      `a person to approve: ${decision.reason}`,
+      false,
+      aborted ? `stopped by ${who}: ${note}` : `refused by ${who}: ${note}`,
+    );
+  }
+
+  /**
+   * Offers a failure to a person, when one is available and it is a failure a
+   * person could fix. Returns what the step loop should do next.
+   */
+  async #handOff(error: unknown, step: Step | null): Promise<"retry" | "advance" | "none"> {
+    if (!(error instanceof Halt)) return "none";
+    const terminal = error.terminal;
+    if (terminal.status !== "failed") return "none";
+    const failure = terminal.failure;
+    const { escalation, maxEscalations } = this.#c;
+    if (escalation === undefined || !failure.escalatable || this.#escalations >= maxEscalations) return "none";
+
+    const outcome = await this.#raise(
+      step,
+      { kind: "replay_failure", code: failure.kind, detail: failure.observed },
+      failure.expected,
+      ["resume", "completed_manually", "abort"],
+    );
+
+    switch (outcome.resolution.kind) {
+      case "resume":
+        return "retry";
+
+      case "completed_manually": {
+        if (step !== null) {
+          const provided = step.outputName === undefined ? undefined : outcome.resolution.outputs?.[step.outputName];
+          if (step.outputName !== undefined && provided !== undefined) this.#outputs[step.outputName] = provided;
+          if (step.risk === "risky_irreversible") this.#riskyExecuted = true;
+          this.#record(step, Date.now(), 0, undefined, "operator");
+        }
+        return "advance";
+      }
+
+      default:
+        throw new Halt({
+          status: "failed",
+          failure: {
+            ...failure,
+            kind: "operator_aborted",
+            escalatable: false,
+            observed: redactor.redactText(
+              `stopped by operator ${outcome.operator ?? "unknown"}: ${outcome.note !== "" ? outcome.note : "no note"} | ` +
+                `original failure ${failure.kind}: ${failure.observed}`,
+            ),
+          },
+        });
+    }
+  }
+
+  /** Pauses for a person and records the handoff. */
+  async #raise(
+    step: Step | null,
+    reason: EscalationReason,
+    expected: string,
+    allowed: readonly ResolutionKind[],
+  ): Promise<EscalationOutcome> {
+    const { escalation, capability, evidence } = this.#c;
+    if (escalation === undefined) throw new Error("no escalation handler is configured");
+
+    this.#escalations++;
+    const request = {
+      mode: "replay" as const,
+      runId: evidence.runId,
+      capabilityId: capability.id,
+      goal: capability.description,
+      stepIndex: step === null ? null : step.index,
+      stepIntent: step === null ? null : step.intent,
+      reason,
+      expected,
+      observed: redactor.redactText(summarize(this.#last)),
+      allowed,
+    };
+    evidence.emit("escalation", `Pausing for a person: ${reason.code}`, { stepIndex: request.stepIndex, reason, allowed });
+
+    const outcome = await escalation(request);
+    this.#interventions.push(recordOf(outcome, request));
+
+    // Whatever the person did happened outside this run's view. If any of it
+    // looked irreversible, treat the session as past an irreversible step, so a
+    // later session expiry is never "recovered" by replaying over their work.
+    if (outcome.actions.some((a) => a.ok && a.policy.verdict === "confirm")) this.#riskyExecuted = true;
+    this.#last = null;
+
+    evidence.emit("escalation", `Resumed after ${outcome.interventionId}: ${outcome.resolution.kind}`, {
+      operator: outcome.operator,
+      note: outcome.note,
+      operatorActions: outcome.actions.length,
+      pausedMs: outcome.pausedMs,
+    });
+    return outcome;
   }
 
   /**
@@ -663,7 +850,13 @@ class ReplayRun {
     return "param" in ref ? (this.#c.inputs[ref.param] ?? "") : ref.literal;
   }
 
-  #record(step: Step, began: number, polls: number, resolvedBy?: StepRecord["resolvedBy"]): void {
+  #record(
+    step: Step,
+    began: number,
+    polls: number,
+    resolvedBy?: StepRecord["resolvedBy"],
+    completedBy: StepRecord["completedBy"] = "automation",
+  ): void {
     this.#steps.push({
       index: step.index,
       action: step.action,
@@ -672,6 +865,7 @@ class ReplayRun {
       polls,
       ...(resolvedBy === undefined ? {} : { resolvedBy }),
       reauthentication: this.#reauthenticating,
+      completedBy,
     });
   }
 
@@ -737,12 +931,14 @@ class ReplayRun {
       steps: this.#steps,
       recoveries: this.#recoveries,
       drift: this.#drift,
+      interventions: this.#interventions,
     };
     evidence.emit("run.end", `Replay ${result.status}`, {
       status: result.status,
       steps: this.#steps.length,
       recoveries: this.#recoveries.length,
       drift: this.#drift.length,
+      interventions: this.#interventions.length,
     });
     evidence.writeResult(result);
     return result;
@@ -758,6 +954,8 @@ export async function replay(options: ReplayOptions): Promise<ReplayResult> {
     evidence: options.evidence,
     entrypoint: options.entrypoint ?? options.capability.surface.entrypoint,
     onConfirm: options.onConfirm ?? denyByDefault,
+    escalation: options.escalation,
+    maxEscalations: options.maxEscalations ?? DEFAULT_MAX_ESCALATIONS,
     stepTimeoutMs: options.stepTimeoutMs ?? DEFAULT_STEP_TIMEOUT_MS,
     pollMs: options.pollMs ?? DEFAULT_POLL_MS,
     profile: options.profile ?? appProfile(options.capability.surface.appProfileId),

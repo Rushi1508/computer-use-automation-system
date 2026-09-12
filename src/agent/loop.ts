@@ -10,18 +10,51 @@
  * rather than an exception. Owning the loop keeps that data flow explicit, and
  * keeps a beta dependency out of the one component whose output everything
  * downstream is compiled from.
+ *
+ * With an escalation handler, the loop can hand the live session to a person in
+ * three situations: the model asks for help, an irreversible action needs a
+ * decision, or the agent is stuck — a run of consecutive failed or refused
+ * actions. What the person did is folded back into both the conversation and
+ * the trace, marked as theirs.
  */
 
 import Anthropic from "@anthropic-ai/sdk";
 
-import type { Action, ObservedElement, Surface } from "../perception/types.js";
-import type { PolicyEngine } from "../policy/engine.js";
-import type { PolicyDecision } from "../policy/types.js";
 import type { EvidenceBus } from "../evidence/bus.js";
-import { locatorEvidence, type LocatorEvidence, verifiableText } from "../locator/match.js";
+import {
+  type EscalationHandler,
+  type EscalationOutcome,
+  type EscalationReason,
+  type InterventionRecord,
+  recordOf,
+  type ResolutionKind,
+} from "../escalation/types.js";
+import {
+  candidateStrategies,
+  locatorEvidence,
+  type LocatorEvidence,
+  resolveTarget,
+  verifiableText,
+} from "../locator/match.js";
+import type { Action, ObservedElement, Surface } from "../perception/types.js";
 import { type ConfirmHandler, denyByDefault } from "../policy/confirm.js";
+import type { PolicyEngine } from "../policy/engine.js";
+import { redactor } from "../policy/redactor.js";
+import type { PolicyDecision } from "../policy/types.js";
 import { CostAccountant } from "./cost.js";
-import { renderObservation, SYSTEM_PROMPT, toolDefinitions, TOOL_SCHEMAS, type ToolName } from "./tools.js";
+import {
+  describeElement,
+  renderObservation,
+  SYSTEM_PROMPT,
+  toolDefinitions,
+  TOOL_SCHEMAS,
+  type ToolName,
+} from "./tools.js";
+
+// The confirmation seam lives with the policy engine, because replay needs it
+// too and the production path must not depend on the model-driven agent.
+// Re-exported for existing callers.
+export { type ConfirmHandler, autoApprove, denyByDefault } from "../policy/confirm.js";
 
 export interface TraceStep {
   readonly index: number;
@@ -44,6 +77,8 @@ export interface TraceStep {
   readonly error?: string;
   readonly outputName?: string;
   readonly extracted?: string;
+  /** Who performed the step. Operator steps come from a handoff. */
+  readonly actor?: "agent" | "operator";
   readonly at: string;
 }
 
@@ -65,12 +100,8 @@ export interface DiscoveryResult {
   readonly steps: number;
   readonly elapsedMs: number;
   readonly usage: { readonly turns: number; readonly costUsd: number; readonly cacheWorking: boolean };
+  readonly interventions?: readonly InterventionRecord[];
 }
-
-// The confirmation seam lives with the policy engine, because replay needs it
-// too and the production path must not depend on the model-driven agent.
-// Re-exported for existing callers.
-export { type ConfirmHandler, autoApprove, denyByDefault } from "../policy/confirm.js";
 
 export interface DiscoveryOptions {
   readonly goal: string;
@@ -82,9 +113,16 @@ export interface DiscoveryOptions {
   readonly maxMs?: number;
   readonly model?: string;
   readonly effort?: "low" | "medium" | "high" | "xhigh" | "max";
+  /** Used for irreversible actions when no escalation handler is present. */
   readonly onConfirm?: ConfirmHandler;
   /** Hard ceiling on estimated model spend, in USD. The loop stops when reached. */
   readonly maxCostUsd?: number;
+  /** Brings a person into the run. Without one, escalating or getting stuck ends the run. */
+  readonly escalation?: EscalationHandler;
+  /** Consecutive failed or refused actions that count as stuck. */
+  readonly stuckThreshold?: number;
+  /** Injected for tests. Defaults to a client built from the environment. */
+  readonly client?: Anthropic;
 }
 
 /**
@@ -139,16 +177,27 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
     effort = (process.env["ANTHROPIC_EFFORT"] as DiscoveryOptions["effort"]) ?? "high",
     onConfirm = denyByDefault,
     maxCostUsd = Number(process.env["MAX_RUN_COST_USD"] ?? 0.75),
+    escalation,
+    stuckThreshold = 3,
   } = options;
 
-  const client = createClient();
+  const client = options.client ?? createClient();
   const accountant = new CostAccountant(model);
   const startedAt = Date.now();
   const trace: TraceStep[] = [];
   const checkpoints: { afterStep: number; description: string; verifiedText: string | null }[] = [];
   const outputs: Record<string, string> = {};
+  const interventions: InterventionRecord[] = [];
 
-  evidence.emit("run.start", `Discovery run started`, { goal, entrypoint, model, effort, maxSteps, maxMs });
+  evidence.emit("run.start", `Discovery run started`, {
+    goal,
+    entrypoint,
+    model,
+    effort,
+    maxSteps,
+    maxMs,
+    escalation: escalation !== undefined,
+  });
 
   // The entrypoint navigation is itself gated — the allowlist applies to the
   // very first action, not only to what the model chooses afterwards.
@@ -166,6 +215,7 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
       steps: 0,
       elapsedMs: Date.now() - startedAt,
       usage: { turns: 0, costUsd: 0, cacheWorking: false },
+      interventions,
     };
     evidence.writeResult(result);
     return result;
@@ -189,6 +239,77 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
   let summary = "Step or time budget exhausted before the goal was reached.";
   let stepIndex = 0;
   let finished = false;
+  let consecutiveFailures = 0;
+
+  /**
+   * Hands the live session to a person and folds what they did back into the
+   * run. Their actions join the trace marked as theirs, so a recording made
+   * with human help says so, rather than presenting the operator's clicks as
+   * the agent's.
+   */
+  const handOff = async (
+    reason: EscalationReason,
+    allowed: readonly ResolutionKind[],
+  ): Promise<{ outcome: EscalationOutcome; briefing: string }> => {
+    if (escalation === undefined) throw new Error("handOff requires an escalation handler");
+
+    const request = {
+      mode: "discovery" as const,
+      runId: evidence.runId,
+      capabilityId: null,
+      goal,
+      stepIndex: trace.length,
+      stepIntent: null,
+      reason,
+      expected: null,
+      observed: redactor.redactText(renderObservation(observation).slice(0, 2000)),
+      allowed,
+    };
+    evidence.emit("escalation", `Handing the session to a person: ${reason.code}`, { reason, allowed });
+    const outcome = await escalation(request);
+    interventions.push(recordOf(outcome, request));
+
+    for (const performed of outcome.actions) {
+      if (!performed.ok || performed.action.kind === "read") continue;
+      trace.push({
+        index: stepIndex++,
+        intent:
+          `Performed by operator ${outcome.operator ?? "unknown"} during a handoff` +
+          (outcome.note !== "" ? `: ${outcome.note}` : ""),
+        action: performed.action,
+        ...(performed.target === null
+          ? {}
+          : { target: performed.target, locatorEvidence: performed.locatorEvidence }),
+        urlBefore: observation.url,
+        titleBefore: observation.title,
+        urlAfter: performed.urlAfter,
+        policy: performed.policy,
+        ok: true,
+        actor: "operator",
+        at: performed.at,
+      });
+    }
+
+    observation = await surface.observe();
+    const did =
+      outcome.actions.length === 0
+        ? "  (nothing through the operator console)"
+        : outcome.actions
+            .map((a) => `  - ${a.action.kind}${a.target === null ? "" : ` ${describeElement(a.target)}`}${a.ok ? "" : " (failed)"}`)
+            .join("\n");
+    const briefing = [
+      `A human operator (${outcome.operator ?? "unknown"}) took control of the live session and has handed it back.`,
+      `Resolution: ${outcome.resolution.kind}`,
+      `Operator note: ${outcome.note !== "" ? outcome.note : "(none)"}`,
+      "What they did:",
+      did,
+      "",
+      "Continue toward the goal from the screen below. Do not repeat what the operator already did.",
+      "",
+      renderObservation(observation),
+    ].join("\n");
+    return { outcome, briefing };
+  };
 
   while (!finished) {
     if (stepIndex >= maxSteps) {
@@ -256,23 +377,27 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
     }
 
     const toolResults: Anthropic.ToolResultBlockParam[] = [];
+    const failed = (id: string, content: string): void => {
+      toolResults.push({ type: "tool_result", tool_use_id: id, content, is_error: true });
+      consecutiveFailures++;
+    };
 
     for (const use of toolUses) {
+      if (finished) {
+        toolResults.push({ type: "tool_result", tool_use_id: use.id, content: "Not performed: the run has ended." });
+        continue;
+      }
+
       const name = use.name as ToolName;
       const schema = TOOL_SCHEMAS[name];
       if (schema === undefined) {
-        toolResults.push({ type: "tool_result", tool_use_id: use.id, content: `Unknown tool ${name}`, is_error: true });
+        failed(use.id, `Unknown tool ${name}`);
         continue;
       }
 
       const parsed = schema.safeParse(use.input);
       if (!parsed.success) {
-        toolResults.push({
-          type: "tool_result",
-          tool_use_id: use.id,
-          content: `Invalid arguments: ${parsed.error.message}`,
-          is_error: true,
-        });
+        failed(use.id, `Invalid arguments: ${parsed.error.message}`);
         continue;
       }
       const input = parsed.data as Record<string, unknown>;
@@ -289,11 +414,28 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
       }
 
       if (name === "escalate") {
-        status = "escalated";
-        summary = String(input["reason"]);
-        evidence.emit("escalation", `Model escalated`, { reason: summary });
-        toolResults.push({ type: "tool_result", tool_use_id: use.id, content: "Escalation recorded." });
-        finished = true;
+        const reasonText = String(input["reason"]);
+        if (escalation === undefined) {
+          status = "escalated";
+          summary = reasonText;
+          evidence.emit("escalation", `Model escalated`, { reason: summary });
+          toolResults.push({ type: "tool_result", tool_use_id: use.id, content: "Escalation recorded." });
+          finished = true;
+          continue;
+        }
+        const { outcome, briefing } = await handOff(
+          { kind: "agent_escalated", code: "agent_escalated", detail: reasonText },
+          ["resume", "completed_manually", "abort"],
+        );
+        if (outcome.resolution.kind === "abort") {
+          status = "escalated";
+          summary = `Stopped by the operator after the agent escalated: ${outcome.note !== "" ? outcome.note : reasonText}`;
+          toolResults.push({ type: "tool_result", tool_use_id: use.id, content: "The operator stopped the run." });
+          finished = true;
+          continue;
+        }
+        consecutiveFailures = 0;
+        toolResults.push({ type: "tool_result", tool_use_id: use.id, content: briefing });
         continue;
       }
 
@@ -327,22 +469,20 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
 
       const action = toAction(name, input);
       if (action === null) {
-        toolResults.push({ type: "tool_result", tool_use_id: use.id, content: `Unsupported tool ${name}`, is_error: true });
+        failed(use.id, `Unsupported tool ${name}`);
         continue;
       }
 
-      const target =
+      let target =
         "nodeId" in action
           ? observation.elements.find((e) => e.nodeId === action.nodeId)
           : undefined;
 
       if ("nodeId" in action && target === undefined) {
-        toolResults.push({
-          type: "tool_result",
-          tool_use_id: use.id,
-          content: `No control with node id ${action.nodeId} in the current observation. Re-read CONTROLS and use a current id.`,
-          is_error: true,
-        });
+        failed(
+          use.id,
+          `No control with node id ${action.nodeId} in the current observation. Re-read CONTROLS and use a current id.`,
+        );
         continue;
       }
 
@@ -354,20 +494,61 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
       });
 
       let permitted = decision.verdict === "allow";
+      let toRun: Action = action;
+      let handoffBriefing: string | null = null;
+
       if (decision.verdict === "confirm") {
-        permitted = await onConfirm(decision, action, target);
-        evidence.emit("policy.decision", `Confirmation ${permitted ? "granted" : "refused"}`, {
-          rule: decision.rule,
-        });
+        if (escalation === undefined) {
+          permitted = await onConfirm(decision, action, target);
+          evidence.emit("policy.decision", `Confirmation ${permitted ? "granted" : "refused"}`, { rule: decision.rule });
+        } else {
+          const { outcome, briefing } = await handOff(
+            { kind: "confirmation_required", code: decision.rule, detail: decision.reason },
+            ["approve", "reject", "abort"],
+          );
+          handoffBriefing = briefing;
+          if (outcome.resolution.kind === "abort") {
+            status = "escalated";
+            summary = `Stopped by the operator at an irreversible step: ${outcome.note !== "" ? outcome.note : decision.reason}`;
+            toolResults.push({ type: "tool_result", tool_use_id: use.id, content: "The operator stopped the run." });
+            finished = true;
+            continue;
+          }
+          permitted = outcome.resolution.kind === "approve";
+          evidence.emit("policy.decision", `Operator ${permitted ? "approved" : "rejected"} the action`, { rule: decision.rule });
+
+          if (permitted && target !== undefined && "nodeId" in action) {
+            // The person may have looked at or changed the screen, which
+            // invalidates node ids. Find the same control again before acting.
+            const again = resolveTarget(
+              {
+                description: "the approved control",
+                framePath: [...target.framePath],
+                actionable: target.actionable,
+                strategies: candidateStrategies(target).map((strategy) => ({
+                  strategy,
+                  confidence: 1,
+                  rationale: "re-found after a handoff",
+                })),
+              },
+              observation.elements,
+            );
+            if (again.element === null) {
+              failed(use.id, `The operator approved this action, but the control is no longer on screen.\n\n${briefing}`);
+              continue;
+            }
+            target = again.element;
+            toRun = { ...action, nodeId: again.element.nodeId };
+          }
+        }
       }
 
       if (!permitted) {
-        toolResults.push({
-          type: "tool_result",
-          tool_use_id: use.id,
-          content: `Refused by policy (${decision.rule}): ${decision.reason} Do not attempt an alternative route to this action.`,
-          is_error: true,
-        });
+        failed(
+          use.id,
+          `Refused by policy (${decision.rule}): ${decision.reason} Do not attempt an alternative route to this action.` +
+            (handoffBriefing === null ? "" : `\n\n${handoffBriefing}`),
+        );
         continue;
       }
 
@@ -379,8 +560,8 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
         target === undefined ? undefined : locatorEvidence(target, observation.elements);
       const why = typeof input["why"] === "string" ? input["why"] : "(no intent recorded)";
 
-      evidence.emit("action.start", `${action.kind}`, { intent: why, action });
-      const result = await surface.act(action);
+      evidence.emit("action.start", `${toRun.kind}`, { intent: why, action: toRun });
+      const result = await surface.act(toRun);
 
       // A click can land somewhere the allowlist forbids. Checking intent alone
       // would miss it, so the location is re-checked after the fact.
@@ -394,7 +575,7 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
       const step: TraceStep = {
         index: stepIndex,
         intent: why,
-        action,
+        action: toRun,
         ...(target === undefined ? {} : { target }),
         ...(evidenceForTarget === undefined ? {} : { locatorEvidence: evidenceForTarget }),
         urlBefore,
@@ -405,6 +586,7 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
         ...(result.error === undefined ? {} : { error: result.error }),
         ...(name === "read" ? { outputName: String(input["outputName"]) } : {}),
         ...(result.text === undefined ? {} : { extracted: result.text }),
+        actor: "agent",
         at: new Date().toISOString(),
       };
       trace.push(step);
@@ -415,7 +597,7 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
         evidence.emit("extraction", `Read ${String(input["outputName"])}`, { value: result.text });
       }
 
-      evidence.emit("action.result", `${action.kind} ${result.ok ? "ok" : "failed"}`, {
+      evidence.emit("action.result", `${toRun.kind} ${result.ok ? "ok" : "failed"}`, {
         ok: result.ok,
         error: result.error,
         url: observation.url,
@@ -436,15 +618,11 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
       }
 
       if (!result.ok) {
-        toolResults.push({
-          type: "tool_result",
-          tool_use_id: use.id,
-          content: `Action failed: ${result.error ?? "unknown error"}\n\n${renderObservation(observation)}`,
-          is_error: true,
-        });
+        failed(use.id, `Action failed: ${result.error ?? "unknown error"}\n\n${renderObservation(observation)}`);
         continue;
       }
 
+      consecutiveFailures = 0;
       const readNote =
         name === "read" ? `Read "${result.text ?? ""}" as output ${String(input["outputName"])}.\n\n` : "";
       toolResults.push({
@@ -454,7 +632,34 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
       });
     }
 
-    messages.push({ role: "user", content: toolResults });
+    const userContent: Array<Anthropic.ToolResultBlockParam | Anthropic.TextBlockParam> = [...toolResults];
+
+    // Stuck detection. A run of failed or refused actions means the agent is
+    // not making progress, and more turns cost money without changing that.
+    if (!finished && consecutiveFailures >= stuckThreshold) {
+      const detail = `${consecutiveFailures} consecutive actions failed or were refused; the agent is not making progress`;
+      evidence.emit("escalation", "Agent appears stuck", { consecutiveFailures });
+      if (escalation === undefined) {
+        status = "escalated";
+        summary = `Stuck: ${detail}.`;
+        finished = true;
+      } else {
+        const { outcome, briefing } = await handOff(
+          { kind: "agent_stuck", code: "agent_stuck", detail },
+          ["resume", "completed_manually", "abort"],
+        );
+        consecutiveFailures = 0;
+        if (outcome.resolution.kind === "abort") {
+          status = "escalated";
+          summary = `Stopped by the operator: ${detail}.`;
+          finished = true;
+        } else {
+          userContent.push({ type: "text", text: briefing });
+        }
+      }
+    }
+
+    messages.push({ role: "user", content: userContent });
   }
 
   const result: DiscoveryResult = {
@@ -472,6 +677,7 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
       costUsd: Number(accountant.costUsd.toFixed(5)),
       cacheWorking: accountant.cacheIsWorking,
     },
+    interventions,
   };
 
   if (status !== "succeeded") {
@@ -484,6 +690,7 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
     status,
     steps: trace.length,
     outputs,
+    interventions: interventions.length,
     usage: accountant.totals,
     costUsd: Number(accountant.costUsd.toFixed(5)),
   });

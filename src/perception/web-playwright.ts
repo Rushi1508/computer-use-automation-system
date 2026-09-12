@@ -272,7 +272,13 @@ function collectReadable(selector: string): RawReadable[] {
     const headerRow = table === null ? null : table.querySelector("tr");
     const columnHeader = (() => {
       if (row === null || headerRow === null || headerRow === row) return null;
-      if (headerRow.querySelector("th") === null) return null;
+      // A header row is made only of header cells. A label/value table whose
+      // rows each start with a <th> is not a grid, and treating its first row
+      // as headers would name every value after the first record's data.
+      if (headerRow.children.length === 0) return null;
+      for (const headerCell of Array.from(headerRow.children)) {
+        if (headerCell.tagName !== "TH") return null;
+      }
       const index = Array.from(row.children).indexOf(el);
       const header = index < 0 ? undefined : headerRow.children[index];
       if (header === undefined) return null;
@@ -570,6 +576,19 @@ export class PlaywrightWebSurface implements Surface {
   async close(): Promise<void> {
     await this.#disposeHandles();
     await this.browser.close().catch(() => {});
+  }
+
+  /**
+   * Notifies on every frame navigation, whoever caused it. Used during a
+   * handoff to record where a person took the session when they worked
+   * directly in the browser window rather than through the operator console.
+   */
+  onNavigate(listener: (url: string, framePath: FramePath) => void): () => void {
+    const handler = (frame: Frame): void => listener(frame.url(), framePathOf(frame));
+    this.page.on("framenavigated", handler);
+    return () => {
+      this.page.off("framenavigated", handler);
+    };
   }
 
   /** Elements observed in the most recent Observation, for callers that need detail. */

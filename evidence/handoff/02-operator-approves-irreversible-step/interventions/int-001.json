@@ -1,0 +1,114 @@
+{
+  "mode": "replay",
+  "runId": "02-operator-approves-irreversible-step",
+  "capabilityId": "open_sub_account",
+  "goal": "HAND-AUTHORED, not recorded. Signs on, opens a {accountType} sub-account for member {memberId} with an initial deposit, and returns the new account number. Step 8 is irreversible and requires a person's approval while this capability is a draft.",
+  "stepIndex": 8,
+  "stepIntent": "Open the account",
+  "reason": {
+    "kind": "confirmation_required",
+    "code": "risky-irreversible",
+    "detail": "'Open Account' looks irreversible. A person should decide before it runs."
+  },
+  "expected": "approval to click the button \"Open Account\"",
+  "observed": "title \"MERIDIAN CORE\" at http://127.0.0.1:64026/ showing: (top) (no document body; content is in child frames) navmenu text: Navigation link \"Member Search\": /url: /content link \"Account Servicing\": /url: /content link \"Sign Off\": /url: /logout main table: rowgroup: row \"MERIDIAN CORE — Member Servicing\": cell \"MERIDIAN CORE — Member Servicing\" row \"Open Sub-Account - 12345\": cell \"Open Sub-Account - 12345\" paragraph: Opening a new sub-account for Dolore…",
+  "allowed": [
+    "approve",
+    "reject",
+    "abort"
+  ],
+  "id": "int-001",
+  "status": "resolved",
+  "createdAt": "2026-09-12T20:31:40.195Z",
+  "claimedAt": "2026-09-12T20:31:40.459Z",
+  "claimedBy": "operator-sam",
+  "resolvedAt": "2026-09-12T20:31:40.627Z",
+  "resolution": {
+    "kind": "approve"
+  },
+  "note": "Checked the form before approving: Savings account, deposit 500.00.",
+  "screenshots": [
+    "evidence\\handoff\\02-operator-approves-irreversible-step\\screenshots\\int-001-handed-over.png",
+    "evidence\\handoff\\02-operator-approves-irreversible-step\\screenshots\\int-001-handed-back.png"
+  ],
+  "actions": [],
+  "navigations": [],
+  "stateBefore": {
+    "at": "2026-09-12T20:31:40.249Z",
+    "url": "http://127.0.0.1:64026/",
+    "title": "MERIDIAN CORE",
+    "fields": [
+      {
+        "label": "Account Type",
+        "value": "Savings"
+      },
+      {
+        "label": "Initial Deposit",
+        "value": "500.00"
+      },
+      {
+        "label": "Reference",
+        "value": ""
+      }
+    ]
+  },
+  "stateAfter": {
+    "at": "2026-09-12T20:31:40.585Z",
+    "url": "http://127.0.0.1:64026/",
+    "title": "MERIDIAN CORE",
+    "fields": [
+      {
+        "label": "Account Type",
+        "value": "Savings"
+      },
+      {
+        "label": "Initial Deposit",
+        "value": "500.00"
+      },
+      {
+        "label": "Reference",
+        "value": ""
+      }
+    ]
+  },
+  "lease": [
+    {
+      "at": "2026-09-12T20:31:40.278Z",
+      "from": "automation",
+      "to": "pending_human",
+      "holder": null,
+      "generation": 0,
+      "reason": "risky-irreversible: 'Open Account' looks irreversible. A person should decide before it runs."
+    },
+    {
+      "at": "2026-09-12T20:31:40.459Z",
+      "from": "pending_human",
+      "to": "human",
+      "holder": {
+        "kind": "operator",
+        "id": "operator-sam"
+      },
+      "generation": 1,
+      "reason": "operator-sam claimed int-001"
+    },
+    {
+      "at": "2026-09-12T20:31:40.626Z",
+      "from": "human",
+      "to": "resuming",
+      "holder": null,
+      "generation": 1,
+      "reason": "operator-sam resolved int-001: approve"
+    },
+    {
+      "at": "2026-09-12T20:31:40.628Z",
+      "from": "resuming",
+      "to": "automation",
+      "holder": {
+        "kind": "automation",
+        "id": "automation"
+      },
+      "generation": 2,
+      "reason": "automation resumes after int-001 (approve)"
+    }
+  ]
+}

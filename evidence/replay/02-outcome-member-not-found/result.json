@@ -8,76 +8,82 @@
   "capabilityId": "lookup_member_savings_balance",
   "capabilityVersion": 1,
   "runId": "02-outcome-member-not-found",
-  "entrypoint": "http://127.0.0.1:58775/",
-  "startedAt": "2026-09-12T19:49:36.939Z",
-  "elapsedMs": 3333,
+  "entrypoint": "http://127.0.0.1:56729/",
+  "startedAt": "2026-09-12T20:32:15.113Z",
+  "elapsedMs": 1522,
   "steps": [
     {
       "index": 0,
       "action": "fill",
       "intent": "Enter operator ID to sign on",
-      "durationMs": 381,
+      "durationMs": 120,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
         "rank": 0,
         "confidence": 0.95
       },
-      "reauthentication": "[REDACTED]"
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
     },
     {
       "index": 1,
       "action": "fill",
       "intent": "Enter password to sign on",
-      "durationMs": 223,
+      "durationMs": 65,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
         "rank": 0,
         "confidence": 0.95
       },
-      "reauthentication": "[REDACTED]"
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
     },
     {
       "index": 2,
       "action": "click",
       "intent": "Submit credentials to sign on",
-      "durationMs": 1105,
+      "durationMs": 495,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
         "rank": 0,
         "confidence": 0.95
       },
-      "reauthentication": "[REDACTED]"
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
     },
     {
       "index": 3,
       "action": "fill",
       "intent": "Enter member ID to look up",
-      "durationMs": 374,
+      "durationMs": 99,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
         "rank": 0,
         "confidence": 0.95
       },
-      "reauthentication": "[REDACTED]"
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
     },
     {
       "index": 4,
       "action": "click",
       "intent": "Search for member {memberId}",
-      "durationMs": 789,
+      "durationMs": 416,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
         "rank": 0,
         "confidence": 0.95
       },
-      "reauthentication": "[REDACTED]"
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
     }
   ],
   "recoveries": [],
-  "drift": []
+  "drift": [],
+  "interventions": []
 }

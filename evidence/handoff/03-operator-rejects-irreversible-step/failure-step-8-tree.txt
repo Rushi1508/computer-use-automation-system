@@ -1,0 +1,42 @@
+# frame: (top)
+(no document body; content is in child frames)
+
+# frame: navmenu
+- text: Navigation
+- link "Member Search":
+  - /url: /content
+- link "Account Servicing":
+  - /url: /content
+- link "Sign Off":
+  - /url: /logout
+
+# frame: main
+- table:
+  - rowgroup:
+    - row "MERIDIAN CORE — Member Servicing":
+      - cell "MERIDIAN CORE — Member Servicing"
+    - row "Open Sub-Account - 12345":
+      - cell "Open Sub-Account - 12345"
+- paragraph: Opening a new sub-account for Dolores Abernathy (12345).
+- table:
+  - rowgroup:
+    - row "Account Type Certificate":
+      - cell "Account Type"
+      - cell "Certificate":
+        - combobox "Account Type":
+          - option "-- select --"
+          - option "Savings"
+          - option "Money Market"
+          - option "Certificate" [selected]
+    - row "Initial Deposit 25000.00":
+      - cell "Initial Deposit"
+      - cell "25000.00":
+        - textbox: "25000.00"
+    - row "Reference":
+      - cell "Reference"
+      - cell:
+        - textbox "Reference"
+    - row "Open Account":
+      - cell
+      - cell "Open Account":
+        - button "Open Account"

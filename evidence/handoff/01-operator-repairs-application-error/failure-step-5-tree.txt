@@ -1,0 +1,21 @@
+# frame: (top)
+(no document body; content is in child frames)
+
+# frame: navmenu
+- text: Navigation
+- link "Member Search":
+  - /url: /content
+- link "Account Servicing":
+  - /url: /content
+- link "Sign Off":
+  - /url: /logout
+
+# frame: main
+- table:
+  - rowgroup:
+    - row "MERIDIAN CORE — Member Servicing":
+      - cell "MERIDIAN CORE — Member Servicing"
+    - row "Application Error":
+      - cell "Application Error"
+- paragraph: Unexpected error processing your request.
+- paragraph: "Reference: MC-500-9a64b475"

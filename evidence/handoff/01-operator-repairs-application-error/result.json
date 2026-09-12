@@ -1,0 +1,113 @@
+{
+  "status": "succeeded",
+  "outputs": {
+    "savingsBalance": "$14,820.37"
+  },
+  "capabilityId": "lookup_member_savings_balance",
+  "capabilityVersion": 1,
+  "runId": "01-operator-repairs-application-error",
+  "entrypoint": "http://127.0.0.1:64026/",
+  "startedAt": "2026-09-12T20:31:34.217Z",
+  "elapsedMs": 3484,
+  "steps": [
+    {
+      "index": 0,
+      "action": "fill",
+      "intent": "Enter operator ID to sign on",
+      "durationMs": 146,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    },
+    {
+      "index": 1,
+      "action": "fill",
+      "intent": "Enter password to sign on",
+      "durationMs": 74,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    },
+    {
+      "index": 2,
+      "action": "click",
+      "intent": "Submit credentials to sign on",
+      "durationMs": 477,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    },
+    {
+      "index": 3,
+      "action": "fill",
+      "intent": "Enter member ID to look up",
+      "durationMs": 104,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    },
+    {
+      "index": 4,
+      "action": "click",
+      "intent": "Search for member {memberId}",
+      "durationMs": 421,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    },
+    {
+      "index": 5,
+      "action": "read",
+      "intent": "Capture the savings account balance requested by the goal",
+      "durationMs": 285,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "grid_cell",
+        "rank": 0,
+        "confidence": 0.92
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    }
+  ],
+  "recoveries": [],
+  "drift": [],
+  "interventions": [
+    {
+      "id": "int-001",
+      "reason": "application_error",
+      "reasonKind": "replay_failure",
+      "stepIndex": 5,
+      "operator": "operator-sam",
+      "resolution": "resume",
+      "note": "Search returned the application error page. Went back to Member Search and re-ran the lookup; member detail is showing.",
+      "operatorActions": 3,
+      "pausedMs": 1438
+    }
+  ]
+}

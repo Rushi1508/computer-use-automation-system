@@ -1,0 +1,269 @@
+{
+  "mode": "replay",
+  "runId": "01-operator-repairs-application-error",
+  "capabilityId": "lookup_member_savings_balance",
+  "goal": "Sign on with operator ID '{operatorId}' and password '[REDACTED]', then look up member {memberId} and read their current savings balance.",
+  "stepIndex": 5,
+  "stepIntent": "Capture the savings account balance requested by the goal",
+  "reason": {
+    "kind": "replay_failure",
+    "code": "application_error",
+    "detail": "application_error: The application returned its generic error page. Waiting will not change that, so replay stops immediately with evidence instead of running out its timeout. | title \"MERIDIAN CORE\" at http://127.0.0.1:64026/ showing: (top) (no document body; content is in child frames) navmenu text: Navigation link \"Member Search\": /url: /content link \"Account Servicing\": /url: /content link \"Sign Off\": /url: /logout main table: rowgroup: row \"MERIDIAN CORE — Member Servicing\": cell \"MERIDIAN CORE — Member Servicing\" row \"Application Error\": cell \"Application Error\" paragraph: Unexpected error processing your request. paragrap…"
+  },
+  "expected": "the application to respond normally",
+  "observed": "title \"MERIDIAN CORE\" at http://127.0.0.1:64026/ showing: (top) (no document body; content is in child frames) navmenu text: Navigation link \"Member Search\": /url: /content link \"Account Servicing\": /url: /content link \"Sign Off\": /url: /logout main table: rowgroup: row \"MERIDIAN CORE — Member Servicing\": cell \"MERIDIAN CORE — Member Servicing\" row \"Application Error\": cell \"Application Error\" paragraph: Unexpected error processing your request. paragrap…",
+  "allowed": [
+    "resume",
+    "completed_manually",
+    "abort"
+  ],
+  "id": "int-001",
+  "status": "resolved",
+  "createdAt": "2026-09-12T20:31:35.889Z",
+  "claimedAt": "2026-09-12T20:31:36.017Z",
+  "claimedBy": "operator-sam",
+  "resolvedAt": "2026-09-12T20:31:37.324Z",
+  "resolution": {
+    "kind": "resume"
+  },
+  "note": "Search returned the application error page. Went back to Member Search and re-ran the lookup; member detail is showing.",
+  "screenshots": [
+    "evidence\\handoff\\01-operator-repairs-application-error\\screenshots\\int-001-handed-over.png",
+    "evidence\\handoff\\01-operator-repairs-application-error\\screenshots\\int-001-handed-back.png"
+  ],
+  "actions": [
+    {
+      "at": "2026-09-12T20:31:36.487Z",
+      "operator": "operator-sam",
+      "action": {
+        "kind": "click",
+        "nodeId": 0
+      },
+      "target": {
+        "nodeId": 0,
+        "actionable": true,
+        "role": "link",
+        "name": "Member Search",
+        "value": null,
+        "enabled": true,
+        "visible": true,
+        "framePath": [
+          "navmenu"
+        ],
+        "anchorText": "Navigation",
+        "hints": {
+          "tag": "a",
+          "inputType": null,
+          "domId": null,
+          "fieldName": null
+        }
+      },
+      "locatorEvidence": [
+        {
+          "strategy": {
+            "kind": "role_name",
+            "role": "link",
+            "name": "Member Search"
+          },
+          "matches": 1
+        },
+        {
+          "strategy": {
+            "kind": "anchored_row",
+            "role": "link",
+            "anchorText": "Navigation"
+          },
+          "matches": 1
+        }
+      ],
+      "policy": {
+        "verdict": "allow",
+        "rule": "risk-classification",
+        "reason": "Action is reversible and read-only in effect."
+      },
+      "ok": true,
+      "urlAfter": "http://127.0.0.1:64026/"
+    },
+    {
+      "at": "2026-09-12T20:31:36.644Z",
+      "operator": "operator-sam",
+      "action": {
+        "kind": "fill",
+        "nodeId": 3,
+        "value": "12345"
+      },
+      "target": {
+        "nodeId": 3,
+        "actionable": true,
+        "role": "textbox",
+        "name": "Member ID",
+        "value": "",
+        "enabled": true,
+        "visible": true,
+        "framePath": [
+          "main"
+        ],
+        "anchorText": "Member ID",
+        "hints": {
+          "tag": "input",
+          "inputType": "text",
+          "domId": "ctl00_MainContent_txtMemberId",
+          "fieldName": "memberId"
+        }
+      },
+      "locatorEvidence": [
+        {
+          "strategy": {
+            "kind": "role_name",
+            "role": "textbox",
+            "name": "Member ID"
+          },
+          "matches": 1
+        },
+        {
+          "strategy": {
+            "kind": "anchored_row",
+            "role": "textbox",
+            "anchorText": "Member ID"
+          },
+          "matches": 1
+        },
+        {
+          "strategy": {
+            "kind": "field_name",
+            "fieldName": "memberId"
+          },
+          "matches": 1
+        },
+        {
+          "strategy": {
+            "kind": "dom_id",
+            "domId": "ctl00_MainContent_txtMemberId"
+          },
+          "matches": 1
+        }
+      ],
+      "policy": {
+        "verdict": "allow",
+        "rule": "risk-classification",
+        "reason": "Action is reversible and read-only in effect."
+      },
+      "ok": true,
+      "urlAfter": "http://127.0.0.1:64026/"
+    },
+    {
+      "at": "2026-09-12T20:31:37.101Z",
+      "operator": "operator-sam",
+      "action": {
+        "kind": "click",
+        "nodeId": 4
+      },
+      "target": {
+        "nodeId": 4,
+        "actionable": true,
+        "role": "button",
+        "name": "Search",
+        "value": "Search",
+        "enabled": true,
+        "visible": true,
+        "framePath": [
+          "main"
+        ],
+        "anchorText": "Member ID",
+        "hints": {
+          "tag": "input",
+          "inputType": "submit",
+          "domId": null,
+          "fieldName": null
+        }
+      },
+      "locatorEvidence": [
+        {
+          "strategy": {
+            "kind": "role_name",
+            "role": "button",
+            "name": "Search"
+          },
+          "matches": 1
+        },
+        {
+          "strategy": {
+            "kind": "anchored_row",
+            "role": "button",
+            "anchorText": "Member ID"
+          },
+          "matches": 1
+        }
+      ],
+      "policy": {
+        "verdict": "allow",
+        "rule": "risk-classification",
+        "reason": "Action is reversible and read-only in effect."
+      },
+      "ok": true,
+      "urlAfter": "http://127.0.0.1:64026/"
+    }
+  ],
+  "navigations": [
+    {
+      "at": "2026-09-12T20:31:36.136Z",
+      "url": "http://127.0.0.1:64026/content"
+    },
+    {
+      "at": "2026-09-12T20:31:36.781Z",
+      "url": "http://127.0.0.1:64026/members/search"
+    }
+  ],
+  "stateBefore": {
+    "at": "2026-09-12T20:31:35.946Z",
+    "url": "http://127.0.0.1:64026/",
+    "title": "MERIDIAN CORE",
+    "fields": []
+  },
+  "stateAfter": {
+    "at": "2026-09-12T20:31:37.278Z",
+    "url": "http://127.0.0.1:64026/",
+    "title": "MERIDIAN CORE",
+    "fields": []
+  },
+  "lease": [
+    {
+      "at": "2026-09-12T20:31:35.978Z",
+      "from": "automation",
+      "to": "pending_human",
+      "holder": null,
+      "generation": 0,
+      "reason": "application_error: application_error: The application returned its generic error page. Waiting will not change that, so replay stops immediately with evidence instead of running out its timeout. | title \"MERIDIAN CORE\" at http://127.0.0.1:64026/ showing: (top) (no document body; content is in child "
+    },
+    {
+      "at": "2026-09-12T20:31:36.016Z",
+      "from": "pending_human",
+      "to": "human",
+      "holder": {
+        "kind": "operator",
+        "id": "operator-sam"
+      },
+      "generation": 1,
+      "reason": "operator-sam claimed int-001"
+    },
+    {
+      "at": "2026-09-12T20:31:37.323Z",
+      "from": "human",
+      "to": "resuming",
+      "holder": null,
+      "generation": 1,
+      "reason": "operator-sam resolved int-001: resume"
+    },
+    {
+      "at": "2026-09-12T20:31:37.325Z",
+      "from": "resuming",
+      "to": "automation",
+      "holder": {
+        "kind": "automation",
+        "id": "automation"
+      },
+      "generation": 2,
+      "reason": "automation resumes after int-001 (resume)"
+    }
+  ]
+}

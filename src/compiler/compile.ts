@@ -274,6 +274,13 @@ export function compile(result: DiscoveryResult, options: CompileOptions): Compi
     const target =
       step.target === undefined ? undefined : deriveTarget(step.target, step.locatorEvidence ?? []);
 
+    if (step.actor === "operator") {
+      notes.push(
+        `Step ${step.index} was performed by a human operator during a handoff. It is recorded as an ordinary ` +
+          `step so the capability is complete; review whether automation should perform it unattended.`,
+      );
+    }
+
     const best = target?.strategies[0];
     if (target !== undefined && best !== undefined && best.confidence < 0.6) {
       notes.push(

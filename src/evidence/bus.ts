@@ -16,7 +16,7 @@
  */
 
 import { mkdirSync, writeFileSync, appendFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
 import { redactor } from "../policy/redactor.js";
 
@@ -85,6 +85,14 @@ export class EvidenceBus {
   saveSnapshot(name: string, content: string): string {
     const file = join(this.dir, `${name}.txt`);
     writeFileSync(file, redactor.redactText(content), "utf8");
+    return file;
+  }
+
+  /** Structured evidence other than the run result, such as intervention records. Redacted on write. */
+  writeJson(relativePath: string, data: unknown): string {
+    const file = join(this.dir, relativePath);
+    mkdirSync(dirname(file), { recursive: true });
+    writeFileSync(file, JSON.stringify(redactor.redactDeep(data), null, 2), "utf8");
     return file;
   }
 

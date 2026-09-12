@@ -6,87 +6,93 @@
   "capabilityId": "lookup_member_savings_balance",
   "capabilityVersion": 1,
   "runId": "07-recovered-slow-load",
-  "entrypoint": "http://127.0.0.1:58775/",
-  "startedAt": "2026-09-12T19:50:01.261Z",
-  "elapsedMs": 6672,
+  "entrypoint": "http://127.0.0.1:56729/",
+  "startedAt": "2026-09-12T20:32:26.413Z",
+  "elapsedMs": 4540,
   "steps": [
     {
       "index": 0,
       "action": "fill",
       "intent": "Enter operator ID to sign on",
-      "durationMs": 353,
+      "durationMs": 109,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
         "rank": 0,
         "confidence": 0.95
       },
-      "reauthentication": "[REDACTED]"
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
     },
     {
       "index": 1,
       "action": "fill",
       "intent": "Enter password to sign on",
-      "durationMs": 197,
+      "durationMs": 68,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
         "rank": 0,
         "confidence": 0.95
       },
-      "reauthentication": "[REDACTED]"
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
     },
     {
       "index": 2,
       "action": "click",
       "intent": "Submit credentials to sign on",
-      "durationMs": 863,
+      "durationMs": 475,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
         "rank": 0,
         "confidence": 0.95
       },
-      "reauthentication": "[REDACTED]"
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
     },
     {
       "index": 3,
       "action": "fill",
       "intent": "Enter member ID to look up",
-      "durationMs": 329,
+      "durationMs": 96,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
         "rank": 0,
         "confidence": 0.95
       },
-      "reauthentication": "[REDACTED]"
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
     },
     {
       "index": 4,
       "action": "click",
       "intent": "Search for member {memberId}",
-      "durationMs": 692,
+      "durationMs": 395,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
         "rank": 0,
         "confidence": 0.95
       },
-      "reauthentication": "[REDACTED]"
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
     },
     {
       "index": 5,
       "action": "read",
       "intent": "Capture the savings account balance requested by the goal",
-      "durationMs": 3689,
-      "polls": 7,
+      "durationMs": 3042,
+      "polls": 9,
       "resolvedBy": {
         "kind": "grid_cell",
         "rank": 0,
         "confidence": 0.92
       },
-      "reauthentication": "[REDACTED]"
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
     }
   ],
   "recoveries": [
@@ -95,8 +101,9 @@
       "atStep": 5,
       "remedy": "bounded_wait",
       "attempt": 1,
-      "detail": "waited 3172ms for the \"Balance\" value in the row containing \"Savings\" to render"
+      "detail": "waited 2869ms for the \"Balance\" value in the row containing \"Savings\" to render"
     }
   ],
-  "drift": []
+  "drift": [],
+  "interventions": []
 }

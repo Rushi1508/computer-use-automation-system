@@ -1,0 +1,114 @@
+{
+  "mode": "replay",
+  "runId": "03-operator-rejects-irreversible-step",
+  "capabilityId": "open_sub_account",
+  "goal": "HAND-AUTHORED, not recorded. Signs on, opens a {accountType} sub-account for member {memberId} with an initial deposit, and returns the new account number. Step 8 is irreversible and requires a person's approval while this capability is a draft.",
+  "stepIndex": 8,
+  "stepIntent": "Open the account",
+  "reason": {
+    "kind": "confirmation_required",
+    "code": "risky-irreversible",
+    "detail": "'Open Account' looks irreversible. A person should decide before it runs."
+  },
+  "expected": "approval to click the button \"Open Account\"",
+  "observed": "title \"MERIDIAN CORE\" at http://127.0.0.1:64026/ showing: (top) (no document body; content is in child frames) navmenu text: Navigation link \"Member Search\": /url: /content link \"Account Servicing\": /url: /content link \"Sign Off\": /url: /logout main table: rowgroup: row \"MERIDIAN CORE — Member Servicing\": cell \"MERIDIAN CORE — Member Servicing\" row \"Open Sub-Account - 12345\": cell \"Open Sub-Account - 12345\" paragraph: Opening a new sub-account for Dolore…",
+  "allowed": [
+    "approve",
+    "reject",
+    "abort"
+  ],
+  "id": "int-001",
+  "status": "resolved",
+  "createdAt": "2026-09-12T20:31:43.874Z",
+  "claimedAt": "2026-09-12T20:31:44.096Z",
+  "claimedBy": "operator-sam",
+  "resolvedAt": "2026-09-12T20:31:44.280Z",
+  "resolution": {
+    "kind": "reject"
+  },
+  "note": "Certificate opening above the unattended limit; needs branch manager sign-off.",
+  "screenshots": [
+    "evidence\\handoff\\03-operator-rejects-irreversible-step\\screenshots\\int-001-handed-over.png",
+    "evidence\\handoff\\03-operator-rejects-irreversible-step\\screenshots\\int-001-handed-back.png"
+  ],
+  "actions": [],
+  "navigations": [],
+  "stateBefore": {
+    "at": "2026-09-12T20:31:43.941Z",
+    "url": "http://127.0.0.1:64026/",
+    "title": "MERIDIAN CORE",
+    "fields": [
+      {
+        "label": "Account Type",
+        "value": "Certificate"
+      },
+      {
+        "label": "Initial Deposit",
+        "value": "25000.00"
+      },
+      {
+        "label": "Reference",
+        "value": ""
+      }
+    ]
+  },
+  "stateAfter": {
+    "at": "2026-09-12T20:31:44.247Z",
+    "url": "http://127.0.0.1:64026/",
+    "title": "MERIDIAN CORE",
+    "fields": [
+      {
+        "label": "Account Type",
+        "value": "Certificate"
+      },
+      {
+        "label": "Initial Deposit",
+        "value": "25000.00"
+      },
+      {
+        "label": "Reference",
+        "value": ""
+      }
+    ]
+  },
+  "lease": [
+    {
+      "at": "2026-09-12T20:31:43.978Z",
+      "from": "automation",
+      "to": "pending_human",
+      "holder": null,
+      "generation": 0,
+      "reason": "risky-irreversible: 'Open Account' looks irreversible. A person should decide before it runs."
+    },
+    {
+      "at": "2026-09-12T20:31:44.095Z",
+      "from": "pending_human",
+      "to": "human",
+      "holder": {
+        "kind": "operator",
+        "id": "operator-sam"
+      },
+      "generation": 1,
+      "reason": "operator-sam claimed int-001"
+    },
+    {
+      "at": "2026-09-12T20:31:44.280Z",
+      "from": "human",
+      "to": "resuming",
+      "holder": null,
+      "generation": 1,
+      "reason": "operator-sam resolved int-001: reject"
+    },
+    {
+      "at": "2026-09-12T20:31:44.281Z",
+      "from": "resuming",
+      "to": "automation",
+      "holder": {
+        "kind": "automation",
+        "id": "automation"
+      },
+      "generation": 2,
+      "reason": "automation resumes after int-001 (reject)"
+    }
+  ]
+}

@@ -1,0 +1,150 @@
+{
+  "status": "failed",
+  "failure": {
+    "kind": "confirmation_refused",
+    "stepIndex": 8,
+    "stepIntent": "Open the account",
+    "expected": "a person to approve: 'Open Account' looks irreversible. A person should decide before it runs.",
+    "observed": "refused by operator operator-sam: Certificate opening above the unattended limit; needs branch manager sign-off. | title \"MERIDIAN CORE\" at http://127.0.0.1:64026/ showing: (top) (no document body; content is in child frames) navmenu text: Navigation link \"Member Search\": /url: /content link \"Account Servicing\": /url: /content link \"Sign Off\": /url: /logout main table: rowgroup: row \"MERIDIAN CORE — Member Servicing\": cell \"MERIDIAN CORE — Member Servicing\" row \"Open Sub-Account - 12345\": cell \"Open Sub-Account - 12345\" paragraph: Opening a new sub-account for Dolore…",
+    "escalatable": false,
+    "evidence": {
+      "screenshot": "evidence\\handoff\\03-operator-rejects-irreversible-step\\screenshots\\failure-step-8.png",
+      "tree": "evidence\\handoff\\03-operator-rejects-irreversible-step\\failure-step-8-tree.txt"
+    }
+  },
+  "capabilityId": "open_sub_account",
+  "capabilityVersion": 1,
+  "runId": "03-operator-rejects-irreversible-step",
+  "entrypoint": "http://127.0.0.1:64026/",
+  "startedAt": "2026-09-12T20:31:41.532Z",
+  "elapsedMs": 2877,
+  "steps": [
+    {
+      "index": 0,
+      "action": "fill",
+      "intent": "Enter the operator ID to sign on",
+      "durationMs": 148,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    },
+    {
+      "index": 1,
+      "action": "fill",
+      "intent": "Enter the password to sign on",
+      "durationMs": 70,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    },
+    {
+      "index": 2,
+      "action": "click",
+      "intent": "Submit the sign-on form",
+      "durationMs": 477,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    },
+    {
+      "index": 3,
+      "action": "fill",
+      "intent": "Enter the member ID to look up",
+      "durationMs": 116,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    },
+    {
+      "index": 4,
+      "action": "click",
+      "intent": "Search for the member",
+      "durationMs": 454,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    },
+    {
+      "index": 5,
+      "action": "click",
+      "intent": "Open the sub-account form for this member",
+      "durationMs": 483,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    },
+    {
+      "index": 6,
+      "action": "select",
+      "intent": "Choose the account type",
+      "durationMs": 138,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    },
+    {
+      "index": 7,
+      "action": "fill",
+      "intent": "Enter the initial deposit",
+      "durationMs": 122,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "anchored_row",
+        "rank": 0,
+        "confidence": 0.85
+      },
+      "reauthentication": "[REDACTED]",
+      "completedBy": "automation"
+    }
+  ],
+  "recoveries": [],
+  "drift": [],
+  "interventions": [
+    {
+      "id": "int-001",
+      "reason": "risky-irreversible",
+      "reasonKind": "confirmation_required",
+      "stepIndex": 8,
+      "operator": "operator-sam",
+      "resolution": "reject",
+      "note": "Certificate opening above the unattended limit; needs branch manager sign-off.",
+      "operatorActions": 0,
+      "pausedMs": 409
+    }
+  ]
+}

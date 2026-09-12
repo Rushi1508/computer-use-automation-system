@@ -1,0 +1,273 @@
+{
+  "schemaVersion": 1,
+  "id": "open_sub_account",
+  "version": 1,
+  "name": "open sub account",
+  "description": "HAND-AUTHORED, not recorded. Signs on, opens a {accountType} sub-account for member {memberId} with an initial deposit, and returns the new account number. Step 8 is irreversible and requires a person's approval while this capability is a draft.",
+  "approvalState": "draft",
+  "surface": {
+    "kind": "legacy_web",
+    "entrypoint": "http://127.0.0.1:4173/",
+    "appProfileId": "meridian_core"
+  },
+  "lineage": {
+    "overrides": []
+  },
+  "inputs": [
+    {
+      "name": "operatorId",
+      "type": "string",
+      "required": true,
+      "description": "Value for \"Operator ID\".",
+      "sensitivity": "pii"
+    },
+    {
+      "name": "password",
+      "type": "string",
+      "required": true,
+      "description": "Value for \"Password\".",
+      "sensitivity": "secret"
+    },
+    {
+      "name": "memberId",
+      "type": "string",
+      "required": true,
+      "description": "The member to open the sub-account for.",
+      "sensitivity": "pii"
+    },
+    {
+      "name": "accountType",
+      "type": "string",
+      "required": true,
+      "description": "One of Savings, Money Market, Certificate.",
+      "sensitivity": "none",
+      "example": "Savings"
+    },
+    {
+      "name": "initialDeposit",
+      "type": "string",
+      "required": true,
+      "description": "Opening deposit in dollars. The application requires at least $25.00.",
+      "sensitivity": "none",
+      "example": "500.00"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "newAccountNumber",
+      "type": "string",
+      "description": "The account number shown on the confirmation screen.",
+      "sensitivity": "pii",
+      "fromStep": 9
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "intent": "Enter the operator ID to sign on",
+      "action": "fill",
+      "target": {
+        "description": "the textbox \"Operator ID\"",
+        "framePath": [],
+        "actionable": true,
+        "strategies": [
+          { "strategy": { "kind": "role_name", "role": "textbox", "name": "Operator ID" }, "confidence": 0.95, "rationale": "The labelled Operator ID field; how an operator identifies it." },
+          { "strategy": { "kind": "field_name", "fieldName": "operator" }, "confidence": 0.7, "rationale": "Form field name, part of the sign-on POST contract." }
+        ]
+      },
+      "value": { "param": "operatorId" },
+      "risk": "safe_reversible",
+      "waitMs": 0
+    },
+    {
+      "index": 1,
+      "intent": "Enter the password to sign on",
+      "action": "fill",
+      "target": {
+        "description": "the textbox \"Password\"",
+        "framePath": [],
+        "actionable": true,
+        "strategies": [
+          { "strategy": { "kind": "role_name", "role": "textbox", "name": "Password" }, "confidence": 0.95, "rationale": "The labelled Password field." },
+          { "strategy": { "kind": "field_name", "fieldName": "password" }, "confidence": 0.7, "rationale": "Form field name, part of the sign-on POST contract." }
+        ]
+      },
+      "value": { "param": "password" },
+      "risk": "safe_reversible",
+      "waitMs": 0
+    },
+    {
+      "index": 2,
+      "intent": "Submit the sign-on form",
+      "action": "click",
+      "target": {
+        "description": "the button \"Sign On\"",
+        "framePath": [],
+        "actionable": true,
+        "strategies": [
+          { "strategy": { "kind": "role_name", "role": "button", "name": "Sign On" }, "confidence": 0.95, "rationale": "The only submit button on the sign-on screen." }
+        ]
+      },
+      "risk": "safe_reversible",
+      "waitMs": 0
+    },
+    {
+      "index": 3,
+      "intent": "Enter the member ID to look up",
+      "action": "fill",
+      "target": {
+        "description": "the textbox \"Member ID\"",
+        "framePath": ["main"],
+        "actionable": true,
+        "strategies": [
+          { "strategy": { "kind": "role_name", "role": "textbox", "name": "Member ID" }, "confidence": 0.95, "rationale": "The labelled Member ID search field." },
+          { "strategy": { "kind": "field_name", "fieldName": "memberId" }, "confidence": 0.7, "rationale": "Form field name, part of the search POST contract." }
+        ]
+      },
+      "value": { "param": "memberId" },
+      "risk": "safe_reversible",
+      "waitMs": 0
+    },
+    {
+      "index": 4,
+      "intent": "Search for the member",
+      "action": "click",
+      "target": {
+        "description": "the button \"Search\"",
+        "framePath": ["main"],
+        "actionable": true,
+        "strategies": [
+          { "strategy": { "kind": "role_name", "role": "button", "name": "Search" }, "confidence": 0.95, "rationale": "The only Search button in the content frame." }
+        ]
+      },
+      "risk": "safe_reversible",
+      "waitMs": 0
+    },
+    {
+      "index": 5,
+      "intent": "Open the sub-account form for this member",
+      "action": "click",
+      "target": {
+        "description": "the button \"Open Sub-Account\"",
+        "framePath": ["main"],
+        "actionable": true,
+        "strategies": [
+          { "strategy": { "kind": "role_name", "role": "button", "name": "Open Sub-Account" }, "confidence": 0.95, "rationale": "The single action button on the member detail screen." }
+        ]
+      },
+      "risk": "safe_reversible",
+      "waitMs": 0
+    },
+    {
+      "index": 6,
+      "intent": "Choose the account type",
+      "action": "select",
+      "target": {
+        "description": "the combobox \"Account Type\"",
+        "framePath": ["main"],
+        "actionable": true,
+        "strategies": [
+          { "strategy": { "kind": "role_name", "role": "combobox", "name": "Account Type" }, "confidence": 0.95, "rationale": "The labelled account type dropdown." },
+          { "strategy": { "kind": "field_name", "fieldName": "accountType" }, "confidence": 0.7, "rationale": "Form field name, part of the open-account POST contract." }
+        ]
+      },
+      "value": { "param": "accountType" },
+      "risk": "safe_reversible",
+      "waitMs": 0
+    },
+    {
+      "index": 7,
+      "intent": "Enter the initial deposit",
+      "action": "fill",
+      "target": {
+        "description": "the textbox in the row labelled \"Initial Deposit\"",
+        "framePath": ["main"],
+        "actionable": true,
+        "strategies": [
+          { "strategy": { "kind": "anchored_row", "role": "textbox", "anchorText": "Initial Deposit" }, "confidence": 0.85, "rationale": "This input has no accessible name; the adjacent label cell is the cue a person uses, so it is the primary strategy rather than a fallback." },
+          { "strategy": { "kind": "field_name", "fieldName": "deposit" }, "confidence": 0.7, "rationale": "Form field name, part of the open-account POST contract." }
+        ]
+      },
+      "value": { "param": "initialDeposit" },
+      "risk": "safe_reversible",
+      "waitMs": 0
+    },
+    {
+      "index": 8,
+      "intent": "Open the account",
+      "action": "click",
+      "target": {
+        "description": "the button \"Open Account\"",
+        "framePath": ["main"],
+        "actionable": true,
+        "strategies": [
+          { "strategy": { "kind": "role_name", "role": "button", "name": "Open Account" }, "confidence": 0.95, "rationale": "The form's only submit button." }
+        ]
+      },
+      "risk": "risky_irreversible",
+      "waitMs": 0
+    },
+    {
+      "index": 9,
+      "intent": "Read the new account number from the confirmation",
+      "action": "read",
+      "target": {
+        "description": "the value labelled \"New Account\"",
+        "framePath": ["main"],
+        "actionable": false,
+        "strategies": [
+          { "strategy": { "kind": "anchored_row", "role": "text", "anchorText": "New Account" }, "confidence": 0.85, "rationale": "The confirmation table is a label/value list; the value sits beside its label." }
+        ]
+      },
+      "outputName": "newAccountNumber",
+      "risk": "safe_reversible",
+      "waitMs": 0
+    }
+  ],
+  "authentication": {
+    "throughStep": 2
+  },
+  "successCheckpoint": {
+    "description": "The screen shows the \"Sub-Account Opened\" confirmation heading.",
+    "detector": { "kind": "text_present", "text": "Sub-Account Opened" }
+  },
+  "knownOutcomes": [
+    {
+      "code": "MEMBER_NOT_FOUND",
+      "description": "No member exists with the supplied ID. A legitimate answer, not a failure.",
+      "detector": { "kind": "text_present", "text": "No member found for ID" },
+      "terminal": true
+    },
+    {
+      "code": "PERMISSION_DENIED",
+      "description": "The member record exists but this operator's role cannot view it. The caller needs to distinguish this from not-found, because the remedy is an access request rather than a corrected ID.",
+      "detector": { "kind": "text_present", "text": "Not authorized to view member" },
+      "terminal": true
+    },
+    {
+      "code": "MEMBER_ID_INVALID",
+      "description": "The application rejected the member ID's format. The caller supplied a malformed value.",
+      "detector": { "kind": "text_present", "text": "Member ID must be numeric" },
+      "terminal": true
+    },
+    {
+      "code": "VALIDATION_REJECTED",
+      "description": "The application rejected the submitted values. The caller should correct inputs and retry.",
+      "detector": { "kind": "text_present", "text": "must be at least" },
+      "terminal": true
+    },
+    {
+      "code": "REQUIRED_FIELD_MISSING",
+      "description": "The application reported that a required field was not supplied.",
+      "detector": { "kind": "text_matches", "pattern": "\\b(Operator ID|Password|Member ID|Account Type|Initial Deposit) is required\\b" },
+      "terminal": true
+    }
+  ],
+  "provenance": {
+    "discoveryRunId": "none",
+    "goal": "Open a {accountType} sub-account for member {memberId} with an initial deposit and reach the confirmation screen.",
+    "model": "hand-authored",
+    "recordedAt": "2026-09-12T00:00:00.000Z",
+    "tracedSteps": 0
+  }
+}

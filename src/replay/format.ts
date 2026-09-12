@@ -1,6 +1,6 @@
 /**
  * Human-readable rendering of a replay result, for the CLI and the scenario
- * runner. The structured result is the contract; this is only a view of it.
+ * runners. The structured result is the contract; this is only a view of it.
  */
 
 import type { ReplayResult } from "./engine.js";
@@ -48,13 +48,25 @@ export function formatReplayResult(result: ReplayResult): string {
           : ` via ${s.resolvedBy.kind}${s.resolvedBy.rank > 0 ? ` (fallback, rank ${s.resolvedBy.rank})` : ""}`;
       const polls = s.polls > 0 ? `, ${s.polls} polls` : "";
       const reauth = s.reauthentication ? " [re-authentication]" : "";
-      lines.push(`  ${String(s.index).padStart(2)}. ${s.action.padEnd(8)}${via}${polls}${reauth}`);
+      const byHand = s.completedBy === "operator" ? " [completed by operator]" : "";
+      lines.push(`  ${String(s.index).padStart(2)}. ${s.action.padEnd(8)}${via}${polls}${reauth}${byHand}`);
     }
   }
 
   if (result.recoveries.length > 0) {
     lines.push("", "Recoveries:");
     for (const r of result.recoveries) lines.push(`  - ${r.id} at step ${r.atStep ?? "-"}: ${r.detail}`);
+  }
+
+  if (result.interventions.length > 0) {
+    lines.push("", "Interventions:");
+    for (const i of result.interventions) {
+      lines.push(
+        `  - ${i.id} at step ${i.stepIndex ?? "-"} (${i.reason}): operator ${i.operator ?? "none"} chose ` +
+          `${i.resolution} after ${(i.pausedMs / 1000).toFixed(1)}s, ${i.operatorActions} action(s)` +
+          (i.note !== "" ? ` — "${i.note}"` : ""),
+      );
+    }
   }
 
   if (result.drift.length > 0) {
