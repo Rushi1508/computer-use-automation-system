@@ -1,0 +1,21 @@
+{
+  "status": "failed",
+  "failure": {
+    "kind": "invalid_input",
+    "stepIndex": null,
+    "stepIntent": null,
+    "expected": "inputs that satisfy the capability's declared contract",
+    "observed": "missing required input 'memberId'",
+    "escalatable": false,
+    "evidence": {}
+  },
+  "capabilityId": "lookup_member_savings_balance",
+  "capabilityVersion": 1,
+  "runId": "09-failed-invalid-invocation",
+  "entrypoint": "http://127.0.0.1:58775/",
+  "startedAt": "2026-09-12T19:50:12.560Z",
+  "elapsedMs": 3,
+  "steps": [],
+  "recoveries": [],
+  "drift": []
+}

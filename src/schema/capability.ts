@@ -49,6 +49,26 @@ export const DetectorSchema = z.discriminatedUnion("kind", [
     framePath: z.array(z.string()).optional(),
   }),
   z.object({ kind: z.literal("text_absent"), text: z.string().min(1) }),
+  z.object({
+    kind: z.literal("text_matches"),
+    /**
+     * A regular expression over the visible text, for messages that vary by
+     * field or value. Prefer this to a short text_present phrase: a detector
+     * that is too broad does not fail loudly, it silently misclassifies screens.
+     */
+    pattern: z
+      .string()
+      .min(1)
+      .refine((pattern) => {
+        try {
+          new RegExp(pattern);
+          return true;
+        } catch {
+          return false;
+        }
+      }, "must be a valid regular expression"),
+    framePath: z.array(z.string()).optional(),
+  }),
   z.object({ kind: z.literal("url_contains"), value: z.string().min(1) }),
   z.object({ kind: z.literal("title_equals"), value: z.string().min(1) }),
 ]);
@@ -75,6 +95,13 @@ export const StrategySchema = z.discriminatedUnion("kind", [
     role: z.string(),
     /** Text of the labelling cell that identifies this control to a person. */
     anchorText: z.string().min(1),
+  }),
+  z.object({
+    kind: z.literal("grid_cell"),
+    /** Header text of the column the value sits under. */
+    column: z.string().min(1),
+    /** Text of another cell in the same row that identifies the row. */
+    rowContains: z.string().min(1),
   }),
   z.object({ kind: z.literal("field_name"), fieldName: z.string().min(1) }),
   z.object({ kind: z.literal("dom_id"), domId: z.string().min(1) }),
@@ -230,6 +257,14 @@ export const CapabilitySchema = z.object({
   inputs: z.array(InputSchema),
   outputs: z.array(OutputSchema),
   steps: z.array(StepSchema).min(1),
+
+  /**
+   * The prefix of steps that establishes a session, when the flow signs on.
+   * Lets replay recover from session expiry by re-running only these steps on
+   * the same browser, instead of replaying the whole flow — which would repeat
+   * any irreversible step already taken.
+   */
+  authentication: z.object({ throughStep: z.number().int().nonnegative() }).optional(),
 
   /** The condition that means the goal was actually reached. */
   successCheckpoint: z.object({

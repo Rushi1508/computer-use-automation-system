@@ -9,15 +9,19 @@
 
 import "dotenv/config";
 
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { autoApprove, denyByDefault, runDiscovery } from "./agent/loop.js";
+import { runDiscovery } from "./agent/loop.js";
 import { compile } from "./compiler/compile.js";
 import { EvidenceBus, newRunId } from "./evidence/bus.js";
 import { launchWebSurface } from "./perception/web-playwright.js";
+import { autoApprove, denyByDefault } from "./policy/confirm.js";
 import { PolicyEngine } from "./policy/engine.js";
 import { defaultPolicyConfig } from "./policy/types.js";
+import { exitCodeFor, replay } from "./replay/engine.js";
+import { formatReplayResult } from "./replay/format.js";
+import { parseCapability } from "./schema/capability.js";
 
 type Command = "discover" | "replay" | "capabilities" | "operator";
 
@@ -38,18 +42,29 @@ Commands:
 ${rows}
 
 discover options:
-  --goal <text>        Natural-language goal (required)
-  --url <url>          Entrypoint URL (required)
-  --max-steps <n>      Step budget (default 30)
-  --max-ms <n>         Wall-clock budget in ms (default 300000)
-  --headed             Show the browser window
-  --allow-risky        Auto-approve irreversible actions instead of refusing them.
-                       Use only for a supervised recording run.
-  --max-cost <usd>     Hard ceiling on estimated model spend (default 0.75)
-  --effort <level>     low|medium|high|xhigh|max (default from ANTHROPIC_EFFORT)
-  --capability <id>    snake_case id for the emitted artifact (enables compilation)
-  --app-profile <id>   Application profile supplying the outcome vocabulary
-                       (default meridian_core)
+  --goal <text>          Natural-language goal (required)
+  --url <url>            Entrypoint URL (required)
+  --max-steps <n>        Step budget (default 30)
+  --max-ms <n>           Wall-clock budget in ms (default 300000)
+  --max-cost <usd>       Hard ceiling on estimated model spend (default 0.75)
+  --effort <level>       low|medium|high|xhigh|max (default from ANTHROPIC_EFFORT)
+  --capability <id>      snake_case id for the emitted artifact (enables compilation)
+  --app-profile <id>     Application profile supplying the outcome vocabulary
+                         (default meridian_core)
+  --headed               Show the browser window
+  --allow-risky          Auto-approve irreversible actions instead of refusing them.
+                         Use only for a supervised recording run.
+
+replay options:
+  --capability <file>    Artifact to run (required)
+  --input <name=value>   An input value. Repeatable.
+  --input-env <name=VAR> Read an input from an environment variable. Use this for
+                         secrets, so they never appear in shell history or process lists.
+  --entrypoint <url>     Bind the capability to another environment or tenant instance
+  --headed               Show the browser window
+  --approve-risky        Approve irreversible steps for this run (supervised use only)
+
+  Exit codes: 0 succeeded, 2 business outcome (a legitimate answer), 1 failed.
 `;
 }
 
@@ -59,12 +74,16 @@ function isCommand(value: string): value is Command {
 
 interface Args {
   readonly flags: ReadonlySet<string>;
+  /** Last value given for each option. */
   readonly values: ReadonlyMap<string, string>;
+  /** Every value given for each option, for repeatable options. */
+  readonly multi: ReadonlyMap<string, readonly string[]>;
 }
 
 function parseArgs(argv: readonly string[]): Args {
   const flags = new Set<string>();
   const values = new Map<string, string>();
+  const multi = new Map<string, string[]>();
   for (let i = 0; i < argv.length; i++) {
     const token = argv[i];
     if (token === undefined || !token.startsWith("--")) continue;
@@ -72,12 +91,13 @@ function parseArgs(argv: readonly string[]): Args {
     const next = argv[i + 1];
     if (next !== undefined && !next.startsWith("--")) {
       values.set(key, next);
+      multi.set(key, [...(multi.get(key) ?? []), next]);
       i++;
     } else {
       flags.add(key);
     }
   }
-  return { flags, values };
+  return { flags, values, multi };
 }
 
 async function discover(args: Args): Promise<number> {
@@ -140,12 +160,13 @@ async function discover(args: Args): Promise<number> {
       const { capability, notes } = compile(result, {
         id: capabilityId,
         name: capabilityId.replace(/_/g, " "),
-        description: result.summary,
         appProfileId: args.values.get("app-profile") ?? "meridian_core",
+        discoveryRunId: evidence.runId,
+        model: process.env["ANTHROPIC_MODEL"] ?? "claude-opus-5",
       });
 
       const file = join("capabilities", `${capability.id}.v${capability.version}.json`);
-      writeFileSync(file, JSON.stringify(capability, null, 2), "utf8");
+      writeFileSync(file, `${JSON.stringify(capability, null, 2)}\n`, "utf8");
 
       process.stdout.write(
         [
@@ -167,6 +188,73 @@ async function discover(args: Args): Promise<number> {
   }
 }
 
+async function replayCommand(args: Args): Promise<number> {
+  const file = args.values.get("capability");
+  if (file === undefined) {
+    process.stderr.write("replay requires --capability <file>\n\n" + usage());
+    return 1;
+  }
+
+  const capability = parseCapability(JSON.parse(readFileSync(file, "utf8")));
+  const secretNames = new Set(capability.inputs.filter((i) => i.sensitivity === "secret").map((i) => i.name));
+  const inputs: Record<string, string> = {};
+
+  for (const pair of args.multi.get("input") ?? []) {
+    const eq = pair.indexOf("=");
+    if (eq <= 0) {
+      process.stderr.write(`--input expects name=value, got '${pair}'\n`);
+      return 1;
+    }
+    const name = pair.slice(0, eq);
+    if (secretNames.has(name)) {
+      process.stderr.write(
+        `warning: '${name}' is a secret input passed on the command line. Prefer --input-env ${name}=VAR ` +
+          `so it stays out of shell history and process listings.\n`,
+      );
+    }
+    inputs[name] = pair.slice(eq + 1);
+  }
+
+  for (const pair of args.multi.get("input-env") ?? []) {
+    const eq = pair.indexOf("=");
+    if (eq <= 0) {
+      process.stderr.write(`--input-env expects name=VARIABLE, got '${pair}'\n`);
+      return 1;
+    }
+    const variable = pair.slice(eq + 1);
+    const value = process.env[variable];
+    if (value === undefined) {
+      process.stderr.write(`environment variable ${variable} is not set\n`);
+      return 1;
+    }
+    inputs[pair.slice(0, eq)] = value;
+  }
+
+  const entrypoint = args.values.get("entrypoint") ?? capability.surface.entrypoint;
+  const evidence = new EvidenceBus(newRunId(`replay-${capability.id}`));
+  // A fresh browser per invocation: a capability is recorded from a signed-out
+  // start, so replay owns the session it runs in.
+  const surface = await launchWebSurface({ headed: args.flags.has("headed") });
+
+  process.stdout.write(`Run ${evidence.runId}\nEvidence: ${evidence.dir}\n\n`);
+
+  try {
+    const result = await replay({
+      capability,
+      inputs,
+      surface,
+      policy: new PolicyEngine(defaultPolicyConfig(new URL(entrypoint).origin)),
+      evidence,
+      entrypoint,
+      onConfirm: args.flags.has("approve-risky") ? autoApprove : denyByDefault,
+    });
+    process.stdout.write(formatReplayResult(result));
+    return exitCodeFor(result);
+  } finally {
+    await surface.close();
+  }
+}
+
 async function main(argv: string[]): Promise<number> {
   const [command, ...rest] = argv;
 
@@ -181,6 +269,7 @@ async function main(argv: string[]): Promise<number> {
   }
 
   if (command === "discover") return discover(parseArgs(rest));
+  if (command === "replay") return replayCommand(parseArgs(rest));
 
   process.stderr.write(`'${command}' is not implemented yet.\n`);
   return 1;

@@ -23,6 +23,6 @@
     "noEmit": true,
     "sourceMap": true
   },
-  "include": ["src/**/*.ts", "apps/**/*.ts", "tests/**/*.ts"],
+  "include": ["src/**/*.ts", "apps/**/*.ts", "tests/**/*.ts", "scripts/**/*.ts"],
   "exclude": ["node_modules", "dist", ".runs"]
 }

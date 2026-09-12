@@ -72,8 +72,9 @@ const DESCRIPTIONS: Record<ToolName, string> = {
     "Read a control's text or value AND declare it as a named output of this capability. " +
     "Call this for every value the goal asks you to retrieve.",
   checkpoint:
-    "Record that an expected state was reached, described by something observable on screen. " +
-    "Call this after a step whose success is not obvious from the next action.",
+    "Record that an expected state was reached. Quote, in double quotes, the exact visible text that proves it. " +
+    "Prefer a heading, column header or button label over a data value, because the check is replayed later " +
+    "with different inputs. Call this after a step whose success is not obvious from the next action.",
   done: "The goal is achieved. Call this last.",
   escalate:
     "You cannot safely proceed — blocked, ambiguous, or the surface is not what you expected. " +

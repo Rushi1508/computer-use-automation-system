@@ -8,18 +8,27 @@
  * product's vocabulary. Every capability recorded against that product hits the
  * same ones, and so does every tenant running it.
  *
- * Two consequences follow, and both matter for the brief:
+ * The profile sorts every unexpected screen into exactly one of three
+ * vocabularies, because what replay should DO differs completely:
+ *
+ *   knownOutcomes      A legitimate answer the caller needs. Returned as a
+ *                      result, never as an error.
+ *   recoverables       Something replay can fix and continue past, with a
+ *                      bounded number of attempts.
+ *   fatalConditions    A state where waiting cannot help. Replay stops at once
+ *                      with evidence rather than running out its timeout.
+ *
+ * Two consequences matter for the brief:
  *
  * - A discovery run sees the happy path by construction. It could not have
  *   learned what "record not found" looks like without deliberately provoking
- *   it, so outcomes are declared here and merged into artifacts at compile
- *   time rather than being invented per recording.
+ *   it, so these are declared here and merged into artifacts at compile time
+ *   rather than invented per recording.
  *
- * - Across tenants, this is the layer that actually gets shared. Two
- *   institutions running the same core banking product have different
- *   hostnames, branding and sometimes field labels, but identical error
- *   vocabulary — so a per-tenant capability can inherit one profile and
- *   override only what genuinely differs.
+ * - Across tenants, this is the layer that actually gets shared. Institutions
+ *   running the same core product differ in hostnames, branding and sometimes
+ *   field labels, but share this vocabulary — so a tenant's capability can
+ *   inherit one profile and override only what genuinely differs.
  */
 
 import { z } from "zod";
@@ -29,29 +38,37 @@ import { DetectorSchema, KnownOutcomeSchema, TargetSchema } from "./capability.j
 /**
  * Something replay can fix by itself and continue.
  *
- * Distinct from a business outcome, which is an answer the caller wants, and
- * from a hard failure, which stops the run. Attempts are bounded because an
- * unbounded remedy loop is how a transient condition becomes an infinite one.
+ * Attempts are bounded because an unbounded remedy loop is how a transient
+ * condition becomes an infinite one.
  */
 export const RecoverableSchema = z.object({
   id: z.string().min(1),
   description: z.string().min(1),
   detector: DetectorSchema,
   remedy: z.discriminatedUnion("kind", [
-    /** Dismiss a known interstitial by clicking its continue control. */
+    /** Dismiss a known interstitial by clicking its continue control. Searched in every frame. */
     z.object({ kind: z.literal("click"), target: TargetSchema }),
-    /** Wait and re-observe. For transient slowness. */
+    /** Wait, then re-observe. */
     z.object({ kind: z.literal("wait"), ms: z.number().int().positive() }),
     /**
-     * Re-run the capability's authentication steps on the same session.
-     * Deliberately not a generic "retry from the start": re-authenticating is
-     * safe to repeat, whereas replaying an irreversible step is not.
+     * Re-run the capability's authentication steps on the same session, then
+     * resume after them. Deliberately not a generic "retry from the start":
+     * re-authenticating is safe to repeat, replaying an irreversible step is
+     * not — so replay refuses this remedy once such a step has run.
      */
     z.object({ kind: z.literal("reauthenticate") }),
   ]),
   maxAttempts: z.number().int().positive().default(2),
 });
 export type Recoverable = z.infer<typeof RecoverableSchema>;
+
+/** A state that waiting will not change. */
+export const FatalConditionSchema = z.object({
+  id: z.string().min(1),
+  description: z.string().min(1),
+  detector: DetectorSchema,
+});
+export type FatalCondition = z.infer<typeof FatalConditionSchema>;
 
 export const AppProfileSchema = z.object({
   schemaVersion: z.literal(1),
@@ -62,6 +79,7 @@ export const AppProfileSchema = z.object({
   productVersion: z.string().min(1),
   knownOutcomes: z.array(KnownOutcomeSchema).default([]),
   recoverables: z.array(RecoverableSchema).default([]),
+  fatalConditions: z.array(FatalConditionSchema).default([]),
 });
 export type AppProfile = z.infer<typeof AppProfileSchema>;
 
@@ -71,6 +89,13 @@ export type AppProfile = z.infer<typeof AppProfileSchema>;
  * Authored by hand, as a real one would be: an integrator writes it once per
  * vendor product by provoking each condition deliberately, which is exactly
  * what a discovery run cannot do for itself.
+ *
+ * Slow renders are deliberately NOT a recoverable here. Replay already waits
+ * for each target with a bounded poll, which absorbs transient slowness and is
+ * recorded as a recovery when it happens. A detector-driven "page looks empty,
+ * wait" rule cannot tell a slow load from the ordinary gap during any frame
+ * navigation, so it would spend its attempt budget on normal page loads and
+ * turn a healthy run into a failure.
  */
 export const MERIDIAN_PROFILE: AppProfile = AppProfileSchema.parse({
   schemaVersion: 1,
@@ -95,15 +120,31 @@ export const MERIDIAN_PROFILE: AppProfile = AppProfileSchema.parse({
       terminal: true,
     },
     {
+      code: "MEMBER_ID_INVALID",
+      description: "The application rejected the member ID's format. The caller supplied a malformed value.",
+      detector: { kind: "text_present", text: "Member ID must be numeric" },
+      terminal: true,
+    },
+    {
       code: "VALIDATION_REJECTED",
       description: "The application rejected the submitted values. The caller should correct inputs and retry.",
       detector: { kind: "text_present", text: "must be at least" },
       terminal: true,
     },
     {
-      code: "ACCOUNT_TYPE_REQUIRED",
-      description: "A required field was not supplied.",
-      detector: { kind: "text_present", text: "is required" },
+      code: "REQUIRED_FIELD_MISSING",
+      description: "The application reported that a required field was not supplied.",
+      // Precise on purpose. An earlier version matched the bare phrase "is
+      // required", which the maintenance notice also contains ("No action is
+      // required."). Outcomes are checked before recoverables, so that notice
+      // was reported to the caller as a missing-field answer instead of being
+      // dismissed. An over-broad detector never errors; it silently swallows
+      // recovery. tests/profile-detectors.test.ts now pins every detector to
+      // exactly the screens it is meant to recognise.
+      detector: {
+        kind: "text_matches",
+        pattern: "\\b(Operator ID|Password|Member ID|Account Type|Initial Deposit) is required\\b",
+      },
       terminal: true,
     },
   ],
@@ -133,20 +174,23 @@ export const MERIDIAN_PROFILE: AppProfile = AppProfileSchema.parse({
       maxAttempts: 2,
     },
     {
-      id: "transient_slow_load",
-      description: "The screen had not finished rendering. Wait once and re-observe before failing.",
-      detector: { kind: "text_absent", text: "MERIDIAN CORE" },
-      remedy: { kind: "wait", ms: 2000 },
-      maxAttempts: 2,
-    },
-    {
       id: "session_expired",
       description:
         "The session timed out mid-flow. Re-running the capability's authentication steps on the " +
-        "same session recovers it; replaying the whole flow could repeat an irreversible step.",
+        "same browser recovers it; replaying the whole flow could repeat an irreversible step.",
       detector: { kind: "text_present", text: "session has timed out" },
       remedy: { kind: "reauthenticate" },
       maxAttempts: 1,
+    },
+  ],
+
+  fatalConditions: [
+    {
+      id: "application_error",
+      description:
+        "The application returned its generic error page. Waiting will not change that, so replay " +
+        "stops immediately with evidence instead of running out its timeout.",
+      detector: { kind: "text_present", text: "Unexpected error processing your request" },
     },
   ],
 });

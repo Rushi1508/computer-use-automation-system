@@ -1,0 +1,19 @@
+{"seq":0,"at":"2026-09-12T19:49:48.323Z","kind":"run.start","message":"Replay of lookup_member_savings_balance v1","data":{"entrypoint":"http://127.0.0.1:58775/","approvalState":"draft","inputs":{"operatorId":"op-[REDACTED]","password":"[REDACTED]","memberId":"12345"}}}
+{"seq":1,"at":"2026-09-12T19:49:48.325Z","kind":"policy.decision","message":"Entrypoint allow","data":{"verdict":"allow","rule":"url-allowlist","reason":"http://127.0.0.1:58775/ is permitted."}}
+{"seq":2,"at":"2026-09-12T19:49:48.636Z","kind":"action.start","message":"Step 0: fill","data":{"intent":"Enter operator ID to sign on","target":"the textbox \"Operator ID\"","reauthentication":"[REDACTED]"}}
+{"seq":3,"at":"2026-09-12T19:49:48.906Z","kind":"policy.decision","message":"fill: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
+{"seq":4,"at":"2026-09-12T19:49:49.048Z","kind":"action.start","message":"Step 1: fill","data":{"intent":"Enter password to sign on","target":"the textbox \"Password\"","reauthentication":"[REDACTED]"}}
+{"seq":5,"at":"2026-09-12T19:49:49.148Z","kind":"policy.decision","message":"fill: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
+{"seq":6,"at":"2026-09-12T19:49:49.267Z","kind":"action.start","message":"Step 2: click","data":{"intent":"Submit credentials to sign on","target":"the button \"Sign On\"","reauthentication":"[REDACTED]"}}
+{"seq":7,"at":"2026-09-12T19:49:49.367Z","kind":"policy.decision","message":"click: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
+{"seq":8,"at":"2026-09-12T19:49:50.162Z","kind":"action.start","message":"Step 3: fill","data":{"intent":"Enter member ID to look up","target":"the textbox \"Member ID\"","reauthentication":"[REDACTED]"}}
+{"seq":9,"at":"2026-09-12T19:49:50.700Z","kind":"recovery","message":"maintenance_interstitial: clicked the Continue button on the maintenance notice","data":{"id":"maintenance_interstitial","atStep":3,"remedy":"click","attempt":1,"detail":"clicked the Continue button on the maintenance notice"}}
+{"seq":10,"at":"2026-09-12T19:49:50.936Z","kind":"policy.decision","message":"fill: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
+{"seq":11,"at":"2026-09-12T19:49:51.182Z","kind":"action.start","message":"Step 4: click","data":{"intent":"Search for member {memberId}","target":"the button \"Search\"","reauthentication":"[REDACTED]"}}
+{"seq":12,"at":"2026-09-12T19:49:51.356Z","kind":"policy.decision","message":"click: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
+{"seq":13,"at":"2026-09-12T19:49:51.958Z","kind":"action.start","message":"Step 5: read","data":{"intent":"Capture the savings account balance requested by the goal","target":"the \"Balance\" value in the row containing \"Savings\"","reauthentication":"[REDACTED]"}}
+{"seq":14,"at":"2026-09-12T19:49:52.204Z","kind":"policy.decision","message":"read: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
+{"seq":15,"at":"2026-09-12T19:49:52.489Z","kind":"extraction","message":"Read savingsBalance","data":{"value":"$14,820.37"}}
+{"seq":16,"at":"2026-09-12T19:49:52.722Z","kind":"checkpoint","message":"Checkpoint after step 5 verified","data":{"kind":"text_present","text":"Account"}}
+{"seq":17,"at":"2026-09-12T19:49:52.966Z","kind":"checkpoint","message":"Success checkpoint verified","data":{"kind":"text_present","text":"Balance"}}
+{"seq":18,"at":"2026-09-12T19:49:52.968Z","kind":"run.end","message":"Replay succeeded","data":{"status":"succeeded","steps":6,"recoveries":1,"drift":0}}

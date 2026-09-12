@@ -1,6 +1,6 @@
 {
   "status": "succeeded",
-  "summary": "Signed on as op-[REDACTED], searched member 12345 (Dolores Abernathy), and read savings balance: $14,820.37 (account 0002-8891).",
+  "summary": "Signed on as op-[REDACTED], looked up member 12345 (Dolores Abernathy); savings account 0002-8891 balance is $14,820.37.",
   "goal": "Sign on with operator ID 'op-[REDACTED]' and password '[REDACTED]', then look up member 12345 and read their current savings balance.",
   "entrypoint": "http://127.0.0.1:4173/",
   "trace": [
@@ -29,6 +29,38 @@
           "fieldName": "operator"
         }
       },
+      "locatorEvidence": [
+        {
+          "strategy": {
+            "kind": "role_name",
+            "role": "textbox",
+            "name": "Operator ID"
+          },
+          "matches": 1
+        },
+        {
+          "strategy": {
+            "kind": "anchored_row",
+            "role": "textbox",
+            "anchorText": "Operator ID"
+          },
+          "matches": 1
+        },
+        {
+          "strategy": {
+            "kind": "field_name",
+            "fieldName": "operator"
+          },
+          "matches": 1
+        },
+        {
+          "strategy": {
+            "kind": "dom_id",
+            "domId": "ctl00_txtOperator"
+          },
+          "matches": 1
+        }
+      ],
       "urlBefore": "http://127.0.0.1:4173/",
       "titleBefore": "Sign On",
       "urlAfter": "http://127.0.0.1:4173/",
@@ -38,7 +70,7 @@
         "reason": "Action is reversible and read-only in effect."
       },
       "ok": true,
-      "at": "2026-09-12T01:43:59.084Z"
+      "at": "2026-09-12T19:48:42.984Z"
     },
     {
       "index": 1,
@@ -65,6 +97,38 @@
           "fieldName": "password"
         }
       },
+      "locatorEvidence": [
+        {
+          "strategy": {
+            "kind": "role_name",
+            "role": "textbox",
+            "name": "Password"
+          },
+          "matches": 1
+        },
+        {
+          "strategy": {
+            "kind": "anchored_row",
+            "role": "textbox",
+            "anchorText": "Password"
+          },
+          "matches": 1
+        },
+        {
+          "strategy": {
+            "kind": "field_name",
+            "fieldName": "password"
+          },
+          "matches": 1
+        },
+        {
+          "strategy": {
+            "kind": "dom_id",
+            "domId": "ctl00_txtPass"
+          },
+          "matches": 1
+        }
+      ],
       "urlBefore": "http://127.0.0.1:4173/",
       "titleBefore": "Sign On",
       "urlAfter": "http://127.0.0.1:4173/",
@@ -74,7 +138,7 @@
         "reason": "Action is reversible and read-only in effect."
       },
       "ok": true,
-      "at": "2026-09-12T01:43:59.131Z"
+      "at": "2026-09-12T19:48:43.114Z"
     },
     {
       "index": 2,
@@ -100,6 +164,16 @@
           "fieldName": null
         }
       },
+      "locatorEvidence": [
+        {
+          "strategy": {
+            "kind": "role_name",
+            "role": "button",
+            "name": "Sign On"
+          },
+          "matches": 1
+        }
+      ],
       "urlBefore": "http://127.0.0.1:4173/",
       "titleBefore": "Sign On",
       "urlAfter": "http://127.0.0.1:4173/",
@@ -109,7 +183,7 @@
         "reason": "Action is reversible and read-only in effect."
       },
       "ok": true,
-      "at": "2026-09-12T01:44:03.462Z"
+      "at": "2026-09-12T19:48:45.705Z"
     },
     {
       "index": 3,
@@ -138,6 +212,38 @@
           "fieldName": "memberId"
         }
       },
+      "locatorEvidence": [
+        {
+          "strategy": {
+            "kind": "role_name",
+            "role": "textbox",
+            "name": "Member ID"
+          },
+          "matches": 1
+        },
+        {
+          "strategy": {
+            "kind": "anchored_row",
+            "role": "textbox",
+            "anchorText": "Member ID"
+          },
+          "matches": 1
+        },
+        {
+          "strategy": {
+            "kind": "field_name",
+            "fieldName": "memberId"
+          },
+          "matches": 1
+        },
+        {
+          "strategy": {
+            "kind": "dom_id",
+            "domId": "ctl00_MainContent_txtMemberId"
+          },
+          "matches": 1
+        }
+      ],
       "urlBefore": "http://127.0.0.1:4173/",
       "titleBefore": "MERIDIAN CORE",
       "urlAfter": "http://127.0.0.1:4173/",
@@ -147,7 +253,7 @@
         "reason": "Action is reversible and read-only in effect."
       },
       "ok": true,
-      "at": "2026-09-12T01:44:07.512Z"
+      "at": "2026-09-12T19:48:47.893Z"
     },
     {
       "index": 4,
@@ -175,6 +281,24 @@
           "fieldName": null
         }
       },
+      "locatorEvidence": [
+        {
+          "strategy": {
+            "kind": "role_name",
+            "role": "button",
+            "name": "Search"
+          },
+          "matches": 1
+        },
+        {
+          "strategy": {
+            "kind": "anchored_row",
+            "role": "button",
+            "anchorText": "Member ID"
+          },
+          "matches": 1
+        }
+      ],
       "urlBefore": "http://127.0.0.1:4173/",
       "titleBefore": "MERIDIAN CORE",
       "urlAfter": "http://127.0.0.1:4173/",
@@ -184,7 +308,7 @@
         "reason": "Action is reversible and read-only in effect."
       },
       "ok": true,
-      "at": "2026-09-12T01:44:11.966Z"
+      "at": "2026-09-12T19:48:50.553Z"
     },
     {
       "index": 5,
@@ -205,6 +329,14 @@
           "main"
         ],
         "anchorText": "Savings",
+        "grid": {
+          "columnHeader": "Balance",
+          "rowTexts": [
+            "0002-8891",
+            "Savings",
+            "2019-03-14"
+          ]
+        },
         "hints": {
           "tag": "td",
           "inputType": null,
@@ -212,6 +344,24 @@
           "fieldName": null
         }
       },
+      "locatorEvidence": [
+        {
+          "strategy": {
+            "kind": "grid_cell",
+            "column": "Balance",
+            "rowContains": "Savings"
+          },
+          "matches": 1
+        },
+        {
+          "strategy": {
+            "kind": "anchored_row",
+            "role": "text",
+            "anchorText": "Savings"
+          },
+          "matches": 2
+        }
+      ],
       "urlBefore": "http://127.0.0.1:4173/",
       "titleBefore": "MERIDIAN CORE",
       "urlAfter": "http://127.0.0.1:4173/",
@@ -223,23 +373,24 @@
       "ok": true,
       "outputName": "savingsBalance",
       "extracted": "$14,820.37",
-      "at": "2026-09-12T01:44:16.021Z"
+      "at": "2026-09-12T19:48:53.549Z"
     }
   ],
   "checkpoints": [
     {
       "afterStep": 5,
-      "description": "Member 12345 (Dolores Abernathy) detail page shown with savings account 0002-8891 balance $14,820.37"
+      "description": "Member detail page shows account table with \"Savings\" row",
+      "verifiedText": "Account"
     }
   ],
   "outputs": {
     "savingsBalance": "$14,820.37"
   },
   "steps": 6,
-  "elapsedMs": 24176,
+  "elapsedMs": 16887,
   "usage": {
-    "turns": 7,
-    "costUsd": 0.08546,
+    "turns": 6,
+    "costUsd": 0.08125,
     "cacheWorking": true
   }
 }

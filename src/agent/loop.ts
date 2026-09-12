@@ -18,6 +18,8 @@ import type { Action, ObservedElement, Surface } from "../perception/types.js";
 import type { PolicyEngine } from "../policy/engine.js";
 import type { PolicyDecision } from "../policy/types.js";
 import type { EvidenceBus } from "../evidence/bus.js";
+import { locatorEvidence, type LocatorEvidence, verifiableText } from "../locator/match.js";
+import { type ConfirmHandler, denyByDefault } from "../policy/confirm.js";
 import { CostAccountant } from "./cost.js";
 import { renderObservation, SYSTEM_PROMPT, toolDefinitions, TOOL_SCHEMAS, type ToolName } from "./tools.js";
 
@@ -27,6 +29,13 @@ export interface TraceStep {
   readonly action: Action;
   /** Full snapshot of the targeted control, so the compiler can derive locators. */
   readonly target?: ObservedElement;
+  /**
+   * How many elements each candidate strategy matched on the screen at the
+   * moment of acting. The compiler ranks locators from this; without it,
+   * uniqueness could only be judged against other recorded targets, which is
+   * how an ambiguous target was once rated unique.
+   */
+  readonly locatorEvidence?: readonly LocatorEvidence[];
   readonly urlBefore: string;
   readonly titleBefore: string;
   readonly urlAfter: string;
@@ -46,29 +55,22 @@ export interface DiscoveryResult {
   readonly goal: string;
   readonly entrypoint: string;
   readonly trace: readonly TraceStep[];
-  readonly checkpoints: readonly { readonly afterStep: number; readonly description: string }[];
+  readonly checkpoints: readonly {
+    readonly afterStep: number;
+    readonly description: string;
+    /** Stable on-screen label confirmed when the checkpoint was recorded, or null. */
+    readonly verifiedText: string | null;
+  }[];
   readonly outputs: Readonly<Record<string, string>>;
   readonly steps: number;
   readonly elapsedMs: number;
   readonly usage: { readonly turns: number; readonly costUsd: number; readonly cacheWorking: boolean };
 }
 
-/**
- * Decides what happens when policy returns `confirm`.
- *
- * The seam for human-in-the-loop escalation. Phase 7 supplies an implementation
- * that pauses the session and hands the live browser to an operator; the
- * default here refuses and tells the model why, which is the safe behaviour for
- * an unattended run.
- */
-export type ConfirmHandler = (
-  decision: PolicyDecision,
-  action: Action,
-  target: ObservedElement | undefined,
-) => Promise<boolean>;
-
-export const denyByDefault: ConfirmHandler = async () => false;
-export const autoApprove: ConfirmHandler = async () => true;
+// The confirmation seam lives with the policy engine, because replay needs it
+// too and the production path must not depend on the model-driven agent.
+// Re-exported for existing callers.
+export { type ConfirmHandler, autoApprove, denyByDefault } from "../policy/confirm.js";
 
 export interface DiscoveryOptions {
   readonly goal: string;
@@ -143,7 +145,7 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
   const accountant = new CostAccountant(model);
   const startedAt = Date.now();
   const trace: TraceStep[] = [];
-  const checkpoints: { afterStep: number; description: string }[] = [];
+  const checkpoints: { afterStep: number; description: string; verifiedText: string | null }[] = [];
   const outputs: Record<string, string> = {};
 
   evidence.emit("run.start", `Discovery run started`, { goal, entrypoint, model, effort, maxSteps, maxMs });
@@ -297,9 +299,27 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
 
       if (name === "checkpoint") {
         const description = String(input["description"]);
-        checkpoints.push({ afterStep: trace.length - 1, description });
-        evidence.emit("checkpoint", description, { afterStep: trace.length - 1 });
-        toolResults.push({ type: "tool_result", tool_use_id: use.id, content: "Checkpoint recorded." });
+        // A checkpoint is only useful later if replay can assert it, so it is
+        // resolved now, while the screen it describes is still showing. Keep a
+        // stable on-screen label that contains no value this run typed. Prose
+        // about "member 12345" would either fail on replay or copy this run's
+        // data into the capability.
+        const typed = trace.flatMap((s) =>
+          s.action.kind === "fill" || s.action.kind === "select" ? [s.action.value] : [],
+        );
+        const verifiedText = verifiableText(description, observation, typed);
+        checkpoints.push({ afterStep: trace.length - 1, description, verifiedText });
+        evidence.emit("checkpoint", description, { afterStep: trace.length - 1, verifiedText });
+        toolResults.push({
+          type: "tool_result",
+          tool_use_id: use.id,
+          content:
+            verifiedText !== null
+              ? `Checkpoint recorded and verified on screen: "${verifiedText}".`
+              : "Checkpoint recorded, but none of its text could be verified as a stable on-screen label, so " +
+                "replay cannot assert it. If it matters, record another checkpoint quoting exact visible text " +
+                "such as a heading, column header or button label.",
+        });
         continue;
       }
 
@@ -353,6 +373,10 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
 
       const urlBefore = observation.url;
       const titleBefore = observation.title;
+      // Measured against the screen as it is before acting — the screen the
+      // model chose this element from.
+      const evidenceForTarget =
+        target === undefined ? undefined : locatorEvidence(target, observation.elements);
       const why = typeof input["why"] === "string" ? input["why"] : "(no intent recorded)";
 
       evidence.emit("action.start", `${action.kind}`, { intent: why, action });
@@ -372,6 +396,7 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
         intent: why,
         action,
         ...(target === undefined ? {} : { target }),
+        ...(evidenceForTarget === undefined ? {} : { locatorEvidence: evidenceForTarget }),
         urlBefore,
         titleBefore,
         urlAfter: observation.url,

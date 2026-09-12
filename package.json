@@ -10,6 +10,7 @@
   "scripts": {
     "cua": "tsx src/cli.ts",
     "demo": "tsx apps/legacy-demo/server.ts",
+    "scenarios": "tsx scripts/replay-scenarios.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"

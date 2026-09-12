@@ -1,0 +1,167 @@
+{
+  "status": "succeeded",
+  "outputs": {
+    "savingsBalance": "$14,820.37"
+  },
+  "capabilityId": "lookup_member_savings_balance",
+  "capabilityVersion": 1,
+  "runId": "06-recovered-session-expired",
+  "entrypoint": "http://127.0.0.1:58775/",
+  "startedAt": "2026-09-12T19:49:53.631Z",
+  "elapsedMs": 6984,
+  "steps": [
+    {
+      "index": 0,
+      "action": "fill",
+      "intent": "Enter operator ID to sign on",
+      "durationMs": 380,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]"
+    },
+    {
+      "index": 1,
+      "action": "fill",
+      "intent": "Enter password to sign on",
+      "durationMs": 211,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]"
+    },
+    {
+      "index": 2,
+      "action": "click",
+      "intent": "Submit credentials to sign on",
+      "durationMs": 933,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]"
+    },
+    {
+      "index": 3,
+      "action": "fill",
+      "intent": "Enter member ID to look up",
+      "durationMs": 342,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]"
+    },
+    {
+      "index": 4,
+      "action": "click",
+      "intent": "Search for member {memberId}",
+      "durationMs": 769,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]"
+    },
+    {
+      "index": 0,
+      "action": "fill",
+      "intent": "Enter operator ID to sign on",
+      "durationMs": 326,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]"
+    },
+    {
+      "index": 1,
+      "action": "fill",
+      "intent": "Enter password to sign on",
+      "durationMs": 219,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]"
+    },
+    {
+      "index": 2,
+      "action": "click",
+      "intent": "Submit credentials to sign on",
+      "durationMs": 893,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]"
+    },
+    {
+      "index": 3,
+      "action": "fill",
+      "intent": "Enter member ID to look up",
+      "durationMs": 350,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]"
+    },
+    {
+      "index": 4,
+      "action": "click",
+      "intent": "Search for member {memberId}",
+      "durationMs": 785,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]"
+    },
+    {
+      "index": 5,
+      "action": "read",
+      "intent": "Capture the savings account balance requested by the goal",
+      "durationMs": 748,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "grid_cell",
+        "rank": 0,
+        "confidence": 0.92
+      },
+      "reauthentication": "[REDACTED]"
+    }
+  ],
+  "recoveries": [
+    {
+      "id": "session_expired",
+      "atStep": 5,
+      "remedy": "reauthenticate",
+      "attempt": 1,
+      "detail": "re-running authentication steps 0-2, then resuming at step 3"
+    }
+  ],
+  "drift": []
+}

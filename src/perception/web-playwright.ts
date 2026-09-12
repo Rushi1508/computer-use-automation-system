@@ -77,6 +77,8 @@ interface RawReadable {
   text: string;
   anchorText: string | null;
   tag: string;
+  columnHeader: string | null;
+  rowTexts: string[];
 }
 
 /** Serialized into the page. Must be self-contained — no closure over module scope. */
@@ -260,6 +262,32 @@ function collectReadable(selector: string): RawReadable[] {
       return null;
     })();
 
+    // Grid coordinates. The column header comes from the table's first row,
+    // only when that row is made of header cells and is not this cell's own
+    // row. colspan is not accounted for — a known limitation that fails safe:
+    // a misaligned header produces a locator that matches nothing, which replay
+    // reports, rather than one that matches the wrong cell.
+    const row = el.closest("tr");
+    const table = el.closest("table");
+    const headerRow = table === null ? null : table.querySelector("tr");
+    const columnHeader = (() => {
+      if (row === null || headerRow === null || headerRow === row) return null;
+      if (headerRow.querySelector("th") === null) return null;
+      const index = Array.from(row.children).indexOf(el);
+      const header = index < 0 ? undefined : headerRow.children[index];
+      if (header === undefined) return null;
+      const t = (header.textContent ?? "").replace(/\s+/g, " ").trim();
+      return t === "" ? null : t;
+    })();
+    const rowTexts: string[] = [];
+    if (row !== null) {
+      for (const cell of Array.from(row.children)) {
+        if (cell === el) continue;
+        const t = (cell.textContent ?? "").replace(/\s+/g, " ").trim();
+        if (t !== "" && t.length <= 200) rowTexts.push(t);
+      }
+    }
+
     const keep =
       el.querySelector("input, select, textarea, button, a[href]") === null &&
       el.getClientRects().length > 0 &&
@@ -267,7 +295,7 @@ function collectReadable(selector: string): RawReadable[] {
       text.length <= 200 &&
       anchorText !== null;
 
-    return { keep, text, anchorText, tag };
+    return { keep, text, anchorText, tag, columnHeader, rowTexts };
   });
 }
 
@@ -385,13 +413,24 @@ export class PlaywrightWebSurface implements Surface {
 
       framePaths.push(path);
 
-      try {
-        const snapshot = await frame.locator("body").ariaSnapshot({ timeout: 2000 });
-        treeParts.push(
-          path.length === 0 ? `# frame: (top)\n${snapshot}` : `# frame: ${path.join(" > ")}\n${snapshot}`,
-        );
-      } catch {
-        treeParts.push(`# frame: ${path.join(" > ") || "(top)"}\n(snapshot unavailable)`);
+      // A frameset document has no <body>. Asking for its accessibility snapshot
+      // through a body locator does not fail — it silently waits out the
+      // timeout, which made every observation of a framed application cost two
+      // seconds and made replay record "slow renders" that were really its own
+      // overhead. So the body is checked for directly; the content of a
+      // frameset lives in its child frames, which are observed in their own right.
+      const header = path.length === 0 ? "# frame: (top)" : `# frame: ${path.join(" > ")}`;
+      const hasBody = await frame.evaluate(() => document.querySelector("body") !== null).catch(() => false);
+      if (!hasBody) {
+        treeParts.push(`${header}\n(no document body; content is in child frames)`);
+      } else {
+        try {
+          const snapshot = await frame.locator("body").ariaSnapshot({ timeout: 2000 });
+          treeParts.push(`${header}\n${snapshot}`);
+        } catch {
+          treeParts.push(`${header}\n(snapshot unavailable)`);
+          warnings.push(`frame ${path.join("/") || "(top)"}: accessibility snapshot unavailable`);
+        }
       }
 
       for (let i = 0; i < metas.length; i++) {
@@ -453,6 +492,9 @@ export class PlaywrightWebSurface implements Surface {
               visible: true,
               framePath: path,
               anchorText: meta.anchorText,
+              ...(meta.columnHeader === null
+                ? {}
+                : { grid: { columnHeader: meta.columnHeader, rowTexts: meta.rowTexts } }),
               hints: { tag: meta.tag, inputType: null, domId: null, fieldName: null },
             };
             elements.push(element);

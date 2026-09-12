@@ -31,6 +31,9 @@ export type EventKind =
   | "checkpoint"
   | "extraction"
   | "escalation"
+  | "recovery"
+  | "outcome"
+  | "drift"
   | "error";
 
 export interface EvidenceEvent {

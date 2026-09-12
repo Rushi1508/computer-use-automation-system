@@ -1,0 +1,83 @@
+{
+  "status": "business_outcome",
+  "outcome": {
+    "code": "MEMBER_NOT_FOUND",
+    "description": "No member exists with the supplied ID. A legitimate answer, not a failure."
+  },
+  "atStep": 5,
+  "capabilityId": "lookup_member_savings_balance",
+  "capabilityVersion": 1,
+  "runId": "02-outcome-member-not-found",
+  "entrypoint": "http://127.0.0.1:58775/",
+  "startedAt": "2026-09-12T19:49:36.939Z",
+  "elapsedMs": 3333,
+  "steps": [
+    {
+      "index": 0,
+      "action": "fill",
+      "intent": "Enter operator ID to sign on",
+      "durationMs": 381,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]"
+    },
+    {
+      "index": 1,
+      "action": "fill",
+      "intent": "Enter password to sign on",
+      "durationMs": 223,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]"
+    },
+    {
+      "index": 2,
+      "action": "click",
+      "intent": "Submit credentials to sign on",
+      "durationMs": 1105,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]"
+    },
+    {
+      "index": 3,
+      "action": "fill",
+      "intent": "Enter member ID to look up",
+      "durationMs": 374,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]"
+    },
+    {
+      "index": 4,
+      "action": "click",
+      "intent": "Search for member {memberId}",
+      "durationMs": 789,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]"
+    }
+  ],
+  "recoveries": [],
+  "drift": []
+}

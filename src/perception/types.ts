@@ -56,6 +56,21 @@ export interface ObservedElement {
    */
   readonly anchorText: string | null;
   /**
+   * Present only for a readable cell in a table that has a header row.
+   *
+   * A value in a data grid is identified by two coordinates, its column and its
+   * row, and neither alone is enough: the account-number cell and the balance
+   * cell in the "Savings" row share the same left-hand neighbour, which is how
+   * a recorded capability once ended up with a read target matching two cells.
+   * Capturing the column header and the row's other cell texts at observation
+   * time lets a locator name both coordinates.
+   */
+  readonly grid?: {
+    readonly columnHeader: string;
+    /** Texts of the other cells in the same row. */
+    readonly rowTexts: readonly string[];
+  };
+  /**
    * Last-resort identification hints, recorded but deliberately ranked below
    * everything semantic. Generated control IDs churn between releases of the
    * vendor product, so these exist to break ties and to debug, not to drive.

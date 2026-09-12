@@ -1,0 +1,83 @@
+{
+  "status": "business_outcome",
+  "outcome": {
+    "code": "MEMBER_ID_INVALID",
+    "description": "The application rejected the member ID's format. The caller supplied a malformed value."
+  },
+  "atStep": 5,
+  "capabilityId": "lookup_member_savings_balance",
+  "capabilityVersion": 1,
+  "runId": "04-outcome-malformed-member-id",
+  "entrypoint": "http://127.0.0.1:58775/",
+  "startedAt": "2026-09-12T19:49:44.689Z",
+  "elapsedMs": 3003,
+  "steps": [
+    {
+      "index": 0,
+      "action": "fill",
+      "intent": "Enter operator ID to sign on",
+      "durationMs": 362,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]"
+    },
+    {
+      "index": 1,
+      "action": "fill",
+      "intent": "Enter password to sign on",
+      "durationMs": 204,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]"
+    },
+    {
+      "index": 2,
+      "action": "click",
+      "intent": "Submit credentials to sign on",
+      "durationMs": 864,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]"
+    },
+    {
+      "index": 3,
+      "action": "fill",
+      "intent": "Enter member ID to look up",
+      "durationMs": 361,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]"
+    },
+    {
+      "index": 4,
+      "action": "click",
+      "intent": "Search for member {memberId}",
+      "durationMs": 749,
+      "polls": 0,
+      "resolvedBy": {
+        "kind": "role_name",
+        "rank": 0,
+        "confidence": 0.95
+      },
+      "reauthentication": "[REDACTED]"
+    }
+  ],
+  "recoveries": [],
+  "drift": []
+}
