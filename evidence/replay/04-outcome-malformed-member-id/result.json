@@ -2,21 +2,22 @@
   "status": "business_outcome",
   "outcome": {
     "code": "MEMBER_ID_INVALID",
-    "description": "The application rejected the member ID's format. The caller supplied a malformed value."
+    "description": "The application rejected the member ID's format. The caller supplied a malformed value.",
+    "basis": "text \"Member ID must be numeric\" is on screen"
   },
   "atStep": 5,
   "capabilityId": "lookup_member_savings_balance",
-  "capabilityVersion": 1,
+  "capabilityVersion": 2,
   "runId": "04-outcome-malformed-member-id",
-  "entrypoint": "http://127.0.0.1:56729/",
-  "startedAt": "2026-09-12T20:32:18.607Z",
-  "elapsedMs": 1530,
+  "entrypoint": "http://127.0.0.1:55626/",
+  "startedAt": "2026-09-12T21:06:55.179Z",
+  "elapsedMs": 2515,
   "steps": [
     {
       "index": 0,
       "action": "fill",
       "intent": "Enter operator ID to sign on",
-      "durationMs": 119,
+      "durationMs": 261,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -30,7 +31,7 @@
       "index": 1,
       "action": "fill",
       "intent": "Enter password to sign on",
-      "durationMs": 62,
+      "durationMs": 183,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -44,7 +45,7 @@
       "index": 2,
       "action": "click",
       "intent": "Submit credentials to sign on",
-      "durationMs": 502,
+      "durationMs": 705,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -58,7 +59,7 @@
       "index": 3,
       "action": "fill",
       "intent": "Enter member ID to look up",
-      "durationMs": 98,
+      "durationMs": 249,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -72,7 +73,7 @@
       "index": 4,
       "action": "click",
       "intent": "Search for member {memberId}",
-      "durationMs": 417,
+      "durationMs": 618,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",

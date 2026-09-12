@@ -4,17 +4,17 @@
     "savingsBalance": "$14,820.37"
   },
   "capabilityId": "lookup_member_savings_balance",
-  "capabilityVersion": 1,
+  "capabilityVersion": 2,
   "runId": "01-operator-repairs-application-error",
-  "entrypoint": "http://127.0.0.1:64026/",
-  "startedAt": "2026-09-12T20:31:34.217Z",
-  "elapsedMs": 3484,
+  "entrypoint": "http://127.0.0.1:51306/",
+  "startedAt": "2026-09-12T21:07:42.030Z",
+  "elapsedMs": 6719,
   "steps": [
     {
       "index": 0,
       "action": "fill",
       "intent": "Enter operator ID to sign on",
-      "durationMs": 146,
+      "durationMs": 298,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -28,7 +28,7 @@
       "index": 1,
       "action": "fill",
       "intent": "Enter password to sign on",
-      "durationMs": 74,
+      "durationMs": 148,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -42,7 +42,7 @@
       "index": 2,
       "action": "click",
       "intent": "Submit credentials to sign on",
-      "durationMs": 477,
+      "durationMs": 796,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -56,7 +56,7 @@
       "index": 3,
       "action": "fill",
       "intent": "Enter member ID to look up",
-      "durationMs": 104,
+      "durationMs": 304,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -70,7 +70,7 @@
       "index": 4,
       "action": "click",
       "intent": "Search for member {memberId}",
-      "durationMs": 421,
+      "durationMs": 648,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -84,7 +84,7 @@
       "index": 5,
       "action": "read",
       "intent": "Capture the savings account balance requested by the goal",
-      "durationMs": 285,
+      "durationMs": 764,
       "polls": 0,
       "resolvedBy": {
         "kind": "grid_cell",
@@ -107,7 +107,7 @@
       "resolution": "resume",
       "note": "Search returned the application error page. Went back to Member Search and re-ran the lookup; member detail is showing.",
       "operatorActions": 3,
-      "pausedMs": 1438
+      "pausedMs": 2954
     }
   ]
 }

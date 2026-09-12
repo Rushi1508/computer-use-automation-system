@@ -8,13 +8,13 @@
  * involved and no API key is needed: this is the path a production agent
  * invokes.
  *
- *   npm run scenarios                      replays the committed capability
+ *   npm run scenarios                      replays the current capability version
  *   npm run scenarios -- path/to/cap.json  replays another one
  *
- * Faults are armed out of band through the demo app's control plane, so the
- * artifact replayed in every scenario is byte-for-byte the one discovery
- * produced. The script exits non-zero if any scenario does not end the way it
- * should, which makes it a regression check as well as an evidence generator.
+ * Faults and data are set up out of band through the demo app's control plane,
+ * so the artifact replayed in every scenario is byte-for-byte the committed one.
+ * The script exits non-zero if any scenario does not end the way it should,
+ * which makes it a regression check as well as an evidence generator.
  */
 
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -31,7 +31,7 @@ import { formatReplayResult } from "../src/replay/format.js";
 import { parseCapability } from "../src/schema/capability.js";
 
 const ROOT = join("evidence", "replay");
-const CAPABILITY_FILE = process.argv[2] ?? join("capabilities", "lookup_member_savings_balance.v1.json");
+const CAPABILITY_FILE = process.argv[2] ?? join("capabilities", "lookup_member_savings_balance.v2.json");
 
 /**
  * The demo application's published sign-on password, shown on its own login
@@ -47,6 +47,8 @@ interface Scenario {
   readonly condition: string;
   readonly inputs: Readonly<Record<string, string>>;
   readonly fault?: Readonly<Record<string, string>>;
+  /** An account opened out of band before the run. */
+  readonly seedAccount?: Readonly<Record<string, string>>;
   readonly expectStatus: ReplayResult["status"];
   /** Output value, outcome code, or failure kind the run should end with. */
   readonly expectDetail: string;
@@ -120,6 +122,28 @@ const SCENARIOS: readonly Scenario[] = [
     expectStatus: "failed",
     expectDetail: "invalid_input",
   },
+  {
+    id: "10-outcome-no-savings-account",
+    condition: "Member whose only account is checking",
+    inputs: { ...HEALTHY, memberId: "23456" },
+    expectStatus: "business_outcome",
+    expectDetail: "NO_SAVINGS_ACCOUNT",
+  },
+  {
+    id: "11-outcome-no-open-accounts",
+    condition: "Closed member with no accounts at all",
+    inputs: { ...HEALTHY, memberId: "67890" },
+    expectStatus: "business_outcome",
+    expectDetail: "NO_OPEN_ACCOUNTS",
+  },
+  {
+    id: "12-failed-ambiguous-savings-accounts",
+    condition: "Member with two savings accounts; the capability cannot tell which balance is meant",
+    inputs: HEALTHY,
+    seedAccount: { memberId: "12345", type: "Savings", depositCents: "50000" },
+    expectStatus: "failed",
+    expectDetail: "target_ambiguous",
+  },
 ];
 
 function detailOf(result: ReplayResult): string {
@@ -133,6 +157,16 @@ function detailOf(result: ReplayResult): string {
     case "failed":
       return result.failure.kind;
   }
+}
+
+async function control(base: string, path: string, body?: Readonly<Record<string, string>>): Promise<void> {
+  const response = await fetch(`${base}/_control/${path}`, {
+    method: "POST",
+    ...(body === undefined
+      ? {}
+      : { headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(body) }),
+  });
+  if (!response.ok) throw new Error(`control plane ${path} failed: ${response.status} ${await response.text()}`);
 }
 
 async function main(): Promise<number> {
@@ -153,14 +187,9 @@ async function main(): Promise<number> {
 
   try {
     for (const scenario of SCENARIOS) {
-      await fetch(`${base}/_control/reset`, { method: "POST" });
-      if (scenario.fault !== undefined) {
-        await fetch(`${base}/_control/fault`, {
-          method: "POST",
-          headers: { "content-type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams(scenario.fault),
-        });
-      }
+      await control(base, "reset");
+      if (scenario.fault !== undefined) await control(base, "fault", scenario.fault);
+      if (scenario.seedAccount !== undefined) await control(base, "account", scenario.seedAccount);
 
       const evidence = new EvidenceBus(scenario.id, ROOT);
       const surface = await launchWebSurface({});

@@ -1,23 +1,23 @@
 {
   "status": "business_outcome",
   "outcome": {
-    "code": "MEMBER_NOT_FOUND",
-    "description": "No member exists with the supplied ID. A legitimate answer, not a failure.",
-    "basis": "text \"No member found for ID\" is on screen"
+    "code": "NO_OPEN_ACCOUNTS",
+    "description": "The member has no open accounts at all, so there is no savings balance to return.",
+    "basis": "text \"No open accounts.\" is on screen in frame main"
   },
   "atStep": 5,
   "capabilityId": "lookup_member_savings_balance",
   "capabilityVersion": 2,
-  "runId": "02-outcome-member-not-found",
+  "runId": "11-outcome-no-open-accounts",
   "entrypoint": "http://127.0.0.1:55626/",
-  "startedAt": "2026-09-12T21:06:49.134Z",
-  "elapsedMs": 2690,
+  "startedAt": "2026-09-12T21:07:22.612Z",
+  "elapsedMs": 2450,
   "steps": [
     {
       "index": 0,
       "action": "fill",
       "intent": "Enter operator ID to sign on",
-      "durationMs": 308,
+      "durationMs": 244,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -31,7 +31,7 @@
       "index": 1,
       "action": "fill",
       "intent": "Enter password to sign on",
-      "durationMs": 210,
+      "durationMs": 174,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -45,7 +45,7 @@
       "index": 2,
       "action": "click",
       "intent": "Submit credentials to sign on",
-      "durationMs": 782,
+      "durationMs": 701,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -59,7 +59,7 @@
       "index": 3,
       "action": "fill",
       "intent": "Enter member ID to look up",
-      "durationMs": 306,
+      "durationMs": 245,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -73,7 +73,7 @@
       "index": 4,
       "action": "click",
       "intent": "Search for member {memberId}",
-      "durationMs": 668,
+      "durationMs": 631,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",

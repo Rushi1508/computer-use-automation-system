@@ -349,8 +349,8 @@ export function compile(result: DiscoveryResult, options: CompileOptions): Compi
         notes.push(
           `Step ${step.index}: output '${step.outputName}' is read from the "${grid.columnHeader}" column of the ` +
             `row containing "${step.target?.anchorText ?? ""}". An invocation whose data has no such row stops ` +
-            `with target_not_found. If that is a legitimate answer for callers, declare it as a capability-level ` +
-            `outcome before approving.`,
+            `with target_not_found. If that is a legitimate answer for callers, declare an absentTarget outcome ` +
+            `for this step, with a positive screenReady detector, and apply it with 'cua revise' before approving.`,
         );
       }
     }

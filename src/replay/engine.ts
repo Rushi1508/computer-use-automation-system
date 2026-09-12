@@ -40,20 +40,27 @@ import {
   recordOf,
   type ResolutionKind,
 } from "../escalation/types.js";
-import { detectorHolds, resolveTarget, screenText } from "../locator/match.js";
+import { detectorHolds, type Resolution as TargetResolution, resolveTarget, screenText } from "../locator/match.js";
 import type { Action, Observation, ObservedElement, Surface } from "../perception/types.js";
 import { type ConfirmHandler, denyByDefault } from "../policy/confirm.js";
 import type { PolicyEngine } from "../policy/engine.js";
 import { redactor } from "../policy/redactor.js";
 import type { PolicyDecision } from "../policy/types.js";
 import { type AppProfile, appProfile } from "../schema/app-profile.js";
-import type { Capability, Detector, Step, Strategy, Target } from "../schema/capability.js";
+import type { AbsenceOutcome, Capability, Detector, Step, Strategy, Target } from "../schema/capability.js";
 
 const DEFAULT_STEP_TIMEOUT_MS = 10_000;
 const DEFAULT_POLL_MS = 250;
 const DEFAULT_MAX_ESCALATIONS = 3;
 /** A wait for a target longer than this is recorded as an absorbed transient load. */
 const SLOW_RENDER_THRESHOLD_MS = 1_500;
+/**
+ * Consecutive observations that must agree before a missing target is taken as
+ * an answer (or as ambiguity). One look can land between a grid's header and
+ * its rows; two looks a poll apart cannot both do that on a page that is still
+ * rendering, unless the page is broken — and a broken page fails readiness.
+ */
+const ABSENCE_CONFIRMATIONS = 2;
 
 // --- Result contract --------------------------------------------------------
 
@@ -62,6 +69,8 @@ export type FailureKind =
   | "policy_denied"
   | "confirmation_refused"
   | "target_not_found"
+  /** Several elements fit every locator strategy. Replay never guesses between them. */
+  | "target_ambiguous"
   | "action_failed"
   | "checkpoint_failed"
   | "output_empty"
@@ -146,7 +155,12 @@ type Terminal =
   | { readonly status: "succeeded"; readonly outputs: Readonly<Record<string, string>> }
   | {
       readonly status: "business_outcome";
-      readonly outcome: { readonly code: string; readonly description: string };
+      readonly outcome: {
+        readonly code: string;
+        readonly description: string;
+        /** Why replay concluded this, in terms a reviewer can check against the evidence. */
+        readonly basis: string;
+      };
       readonly atStep: number | null;
     }
   | { readonly status: "failed"; readonly failure: ReplayFailure };
@@ -235,6 +249,45 @@ function summarize(obs: Observation | null): string {
   const clipped = text.length > 400 ? `${text.slice(0, 400)}…` : text;
   const warnings = obs.warnings.length > 0 ? ` | warnings: ${obs.warnings.join("; ")}` : "";
   return `title "${obs.title}" at ${obs.url} showing: ${clipped}${warnings}`;
+}
+
+function describeDetector(detector: Detector): string {
+  const frame =
+    "framePath" in detector && detector.framePath !== undefined
+      ? ` in frame ${detector.framePath.length === 0 ? "(top)" : detector.framePath.join(" > ")}`
+      : "";
+  switch (detector.kind) {
+    case "text_present":
+      return `text "${detector.text}" is on screen${frame}`;
+    case "text_absent":
+      return `text "${detector.text}" is not on screen`;
+    case "text_matches":
+      return `text matching /${detector.pattern}/ is on screen${frame}`;
+    case "url_contains":
+      return `the URL contains "${detector.value}"`;
+    case "title_equals":
+      return `the title is "${detector.value}"`;
+    case "grid_column":
+      return `a grid with a "${detector.column}" column has rendered${frame}`;
+  }
+}
+
+function describeAttempts(resolution: TargetResolution): string {
+  return resolution.attempts
+    .map((a) => `${a.kind} ${a.outcome.replace("_", " ")}${a.outcome === "ambiguous" ? ` (${a.matches} matches)` : ""}`)
+    .join("; ");
+}
+
+type MissingVerdict = "absent" | "ambiguous";
+
+/**
+ * What a missing target means on this observation, when the capability says
+ * absence at this step can be an answer. Null means nothing can be concluded:
+ * the region the target lives in has not been shown to have rendered.
+ */
+function missingVerdict(outcome: AbsenceOutcome, resolution: TargetResolution, obs: Observation): MissingVerdict | null {
+  if (!detectorHolds(outcome.absentTarget.screenReady, obs)) return null;
+  return resolution.attempts.every((a) => a.outcome === "no_match") ? "absent" : "ambiguous";
 }
 
 interface Config {
@@ -498,12 +551,27 @@ class ReplayRun {
       return false;
     }
 
-    const outcome = await this.#raise(
-      step,
-      { kind: "confirmation_required", code: decision.rule, detail: decision.reason },
-      `approval to ${step.action} ${target.description}`,
-      ["approve", "reject", "abort"],
-    );
+    let outcome: EscalationOutcome;
+    try {
+      outcome = await this.#raise(
+        step,
+        { kind: "confirmation_required", code: decision.rule, detail: decision.reason },
+        `approval to ${step.action} ${target.description}`,
+        ["approve", "reject", "abort"],
+      );
+    } catch (error) {
+      // No approval could be obtained, which is not the same as an approval.
+      // The irreversible step does not run.
+      const message = error instanceof Error ? error.message : String(error);
+      evidence.emit("error", "Could not reach a person for approval", { error: message, rule: decision.rule });
+      throw await this.#fail(
+        "confirmation_refused",
+        step,
+        `a person to approve: ${decision.reason}`,
+        false,
+        `no approval could be obtained: ${message}`,
+      );
+    }
     if (outcome.resolution.kind === "approve") return true;
 
     // A person made this decision; it is not something to escalate again.
@@ -531,12 +599,24 @@ class ReplayRun {
     const { escalation, maxEscalations } = this.#c;
     if (escalation === undefined || !failure.escalatable || this.#escalations >= maxEscalations) return "none";
 
-    const outcome = await this.#raise(
-      step,
-      { kind: "replay_failure", code: failure.kind, detail: failure.observed },
-      failure.expected,
-      ["resume", "completed_manually", "abort"],
-    );
+    let outcome: EscalationOutcome;
+    try {
+      outcome = await this.#raise(
+        step,
+        { kind: "replay_failure", code: failure.kind, detail: failure.observed },
+        failure.expected,
+        ["resume", "completed_manually", "abort"],
+      );
+    } catch (error) {
+      // The escalation channel failing is not the run's result. The caller is
+      // still owed the failure that prompted the escalation, unmasked.
+      const message = error instanceof Error ? error.message : String(error);
+      this.#c.evidence.emit("error", "Escalation failed; returning the original failure", {
+        error: message,
+        failure: failure.kind,
+      });
+      return "none";
+    }
 
     switch (outcome.resolution.kind) {
       case "resume":
@@ -615,15 +695,20 @@ class ReplayRun {
    * Finds a step's target, waiting for it with a bounded poll.
    *
    * Each poll checks, in order: business outcomes (the application answered),
-   * fatal conditions (waiting cannot help), the target itself, and finally
-   * recoverable conditions. Outcomes come first because an answer screen is
-   * never something to wait past or remedy.
+   * fatal conditions (waiting cannot help), the target itself, whether a
+   * missing target is conclusive — only where the capability declares what its
+   * absence means — and finally recoverable conditions. Outcomes come first
+   * because an answer screen is never something to wait past or remedy.
    */
   async #locate(step: Step, target: Target): Promise<Located> {
     const { surface, stepTimeoutMs, pollMs, evidence } = this.#c;
+    const absence = this.#absenceOutcomeFor(step);
     const began = Date.now();
     const deadline = began + stepTimeoutMs;
     let polls = 0;
+    let previous: MissingVerdict | null = null;
+    let sightings = 0;
+    let graceUsed = false;
 
     for (;;) {
       const obs = await surface.observe();
@@ -674,13 +759,37 @@ class ReplayRun {
         };
       }
 
-      if (await this.#tryRecover(obs, step)) continue;
+      const verdict = absence === undefined ? null : missingVerdict(absence, resolution, obs);
+      sightings = verdict === null ? 0 : verdict === previous ? sightings + 1 : 1;
+      previous = verdict;
+
+      if (absence !== undefined && verdict !== null && sightings >= ABSENCE_CONFIRMATIONS) {
+        if (verdict === "absent") this.#haltAbsent(step, target, absence, resolution);
+        throw await this.#fail(
+          "target_ambiguous",
+          step,
+          `exactly one ${target.description} [${describeAttempts(resolution)}]`,
+          true,
+          `${describeDetector(absence.absentTarget.screenReady)}, and several elements fit every locator strategy; ` +
+            "replay does not guess between them",
+        );
+      }
+
+      if (verdict === null && (await this.#tryRecover(obs, step))) continue;
 
       if (Date.now() >= deadline) {
-        const tried = resolution.attempts
-          .map((a) => `${a.kind} ${a.outcome.replace("_", " ")}${a.outcome === "ambiguous" ? ` (${a.matches} matches)` : ""}`)
-          .join("; ");
-        throw await this.#fail("target_not_found", step, `${target.description} [${tried}]`, true);
+        // A first conclusive sighting earns one confirming look, even at the
+        // deadline. Otherwise a slow poll would turn an answer into a failure.
+        if (verdict === null || graceUsed) {
+          const ambiguous = resolution.attempts.some((a) => a.outcome === "ambiguous");
+          throw await this.#fail(
+            ambiguous ? "target_ambiguous" : "target_not_found",
+            step,
+            `${target.description} [${describeAttempts(resolution)}]`,
+            true,
+          );
+        }
+        graceUsed = true;
       }
 
       polls++;
@@ -688,14 +797,42 @@ class ReplayRun {
     }
   }
 
+  #absenceOutcomeFor(step: Step): AbsenceOutcome | undefined {
+    return this.#c.capability.knownOutcomes.find(
+      (outcome): outcome is AbsenceOutcome => "absentTarget" in outcome && outcome.absentTarget.step === step.index,
+    );
+  }
+
+  #haltAbsent(step: Step, target: Target, outcome: AbsenceOutcome, resolution: TargetResolution): never {
+    const basis =
+      `${describeDetector(outcome.absentTarget.screenReady)}, and no locator strategy found ${target.description} ` +
+      `on ${ABSENCE_CONFIRMATIONS} consecutive observations [${describeAttempts(resolution)}]`;
+    this.#c.evidence.emit("outcome", `Business outcome ${outcome.code}`, {
+      code: outcome.code,
+      atStep: step.index,
+      basis,
+      attempts: resolution.attempts,
+    });
+    throw new Halt({
+      status: "business_outcome",
+      outcome: { code: outcome.code, description: outcome.description, basis },
+      atStep: step.index,
+    });
+  }
+
   #checkOutcomes(obs: Observation, step: Step | null): void {
     for (const outcome of this.#c.capability.knownOutcomes) {
-      if (!outcome.terminal || !detectorHolds(outcome.detector, obs)) continue;
+      // Absence outcomes are judged only while locating their own step.
+      if (!("detector" in outcome) || !outcome.terminal) continue;
+      if (outcome.atSteps !== undefined && (step === null || !outcome.atSteps.includes(step.index))) continue;
+      if (!detectorHolds(outcome.detector, obs)) continue;
+
       const atStep = step === null ? null : step.index;
-      this.#c.evidence.emit("outcome", `Business outcome ${outcome.code}`, { code: outcome.code, atStep });
+      const basis = describeDetector(outcome.detector);
+      this.#c.evidence.emit("outcome", `Business outcome ${outcome.code}`, { code: outcome.code, atStep, basis });
       throw new Halt({
         status: "business_outcome",
-        outcome: { code: outcome.code, description: outcome.description },
+        outcome: { code: outcome.code, description: outcome.description, basis },
         atStep,
       });
     }

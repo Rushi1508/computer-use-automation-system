@@ -92,6 +92,20 @@ export function createApp(): express.Express {
     res.json({ ok: true });
   });
 
+  // Seeds an account without driving the UI, so a scenario can set up data (a
+  // member with two savings accounts) without the artifact under test doing it.
+  app.post("/_control/account", (req, res) => {
+    const member = findMember(String(req.body?.memberId ?? ""));
+    const type = String(req.body?.type ?? "");
+    const depositCents = Number(req.body?.depositCents ?? 0);
+    const types = ["Checking", "Savings", "Money Market", "Certificate"];
+    if (member === undefined || !types.includes(type) || !Number.isInteger(depositCents) || depositCents < 0) {
+      res.status(400).json({ error: "an existing memberId, a valid type and whole depositCents are required" });
+      return;
+    }
+    res.json({ accountNumber: openSubAccount(member.id, type, depositCents) });
+  });
+
   app.get("/_control/state", (_req, res) => {
     res.json({ armedFault: peekFault(), sessions: sessions.size });
   });

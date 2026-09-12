@@ -4,17 +4,17 @@
     "savingsBalance": "$14,820.37"
   },
   "capabilityId": "lookup_member_savings_balance",
-  "capabilityVersion": 1,
+  "capabilityVersion": 2,
   "runId": "07-recovered-slow-load",
-  "entrypoint": "http://127.0.0.1:56729/",
-  "startedAt": "2026-09-12T20:32:26.413Z",
-  "elapsedMs": 4540,
+  "entrypoint": "http://127.0.0.1:55626/",
+  "startedAt": "2026-09-12T21:07:09.176Z",
+  "elapsedMs": 6088,
   "steps": [
     {
       "index": 0,
       "action": "fill",
       "intent": "Enter operator ID to sign on",
-      "durationMs": 109,
+      "durationMs": 263,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -28,7 +28,7 @@
       "index": 1,
       "action": "fill",
       "intent": "Enter password to sign on",
-      "durationMs": 68,
+      "durationMs": 177,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -42,7 +42,7 @@
       "index": 2,
       "action": "click",
       "intent": "Submit credentials to sign on",
-      "durationMs": 475,
+      "durationMs": 667,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -56,7 +56,7 @@
       "index": 3,
       "action": "fill",
       "intent": "Enter member ID to look up",
-      "durationMs": 96,
+      "durationMs": 232,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -70,7 +70,7 @@
       "index": 4,
       "action": "click",
       "intent": "Search for member {memberId}",
-      "durationMs": 395,
+      "durationMs": 597,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -84,8 +84,8 @@
       "index": 5,
       "action": "read",
       "intent": "Capture the savings account balance requested by the goal",
-      "durationMs": 3042,
-      "polls": 9,
+      "durationMs": 3617,
+      "polls": 7,
       "resolvedBy": {
         "kind": "grid_cell",
         "rank": 0,
@@ -101,7 +101,7 @@
       "atStep": 5,
       "remedy": "bounded_wait",
       "attempt": 1,
-      "detail": "waited 2869ms for the \"Balance\" value in the row containing \"Savings\" to render"
+      "detail": "waited 3114ms for the \"Balance\" value in the row containing \"Savings\" to render"
     }
   ],
   "drift": [],

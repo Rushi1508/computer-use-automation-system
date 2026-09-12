@@ -23,6 +23,7 @@ export function formatReplayResult(result: ReplayResult): string {
       lines.push(
         `Outcome:    ${result.outcome.code} (at step ${result.atStep ?? "-"})`,
         `            ${result.outcome.description}`,
+        `  basis:    ${result.outcome.basis}`,
       );
       break;
 

@@ -3,6 +3,7 @@
  *
  *   discover  LLM-driven run against a live surface; emits a capability artifact.
  *   replay    Deterministic execution of a saved artifact. No model in the loop.
+ *   revise    Apply a reviewed revision to an artifact, producing its next version.
  *
  * Either can run with --escalate, which serves the operator console alongside
  * the run so a person can take over the same live session when it needs them.
@@ -10,12 +11,13 @@
 
 import "dotenv/config";
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import type { Server } from "node:http";
 import { join } from "node:path";
 
 import { runDiscovery } from "./agent/loop.js";
 import { compile } from "./compiler/compile.js";
+import { parseReview, reviseCapability } from "./compiler/revise.js";
 import { HandoffDesk } from "./escalation/desk.js";
 import { createOperatorApp } from "./escalation/operator-server.js";
 import type { EscalationHandler } from "./escalation/types.js";
@@ -30,11 +32,12 @@ import { formatReplayResult } from "./replay/format.js";
 import { parseCapability } from "./schema/capability.js";
 import { LeasedSurface, SessionLease } from "./session/lease.js";
 
-type Command = "discover" | "replay";
+type Command = "discover" | "replay" | "revise";
 
 const COMMANDS: Record<Command, string> = {
   discover: "Run the agent against a goal and record a capability artifact",
   replay: "Replay a saved capability artifact with typed input parameters",
+  revise: "Apply a reviewed revision to a capability, writing its next version as a draft",
 };
 
 function usage(): string {
@@ -69,6 +72,12 @@ replay options:
   --headed                  Show the browser window
   --approve-risky           Approve irreversible steps (supervised use only).
                             Ignored with --escalate, where a person decides.
+
+revise options:
+  --capability <file>       The artifact to revise
+  --review <file>           A reviewed revision naming the id and version it applies to.
+                            Writes the next version as a draft. Existing versions are never
+                            overwritten.
 
 handoff options (discover and replay):
   --escalate                Serve the operator console and bring a person in when the run
@@ -330,6 +339,35 @@ async function replayCommand(args: Args): Promise<number> {
   }
 }
 
+async function reviseCommand(args: Args): Promise<number> {
+  const file = args.values.get("capability");
+  const reviewFile = args.values.get("review");
+  if (file === undefined || reviewFile === undefined) {
+    process.stderr.write("revise requires --capability <file> and --review <file>\n\n" + usage());
+    return 1;
+  }
+
+  const base = parseCapability(JSON.parse(readFileSync(file, "utf8")));
+  const revised = reviseCapability(base, parseReview(JSON.parse(readFileSync(reviewFile, "utf8"))));
+  const out = join("capabilities", `${revised.id}.v${revised.version}.json`);
+  if (existsSync(out)) {
+    process.stderr.write(`${out} already exists. Versions are immutable: a changed artifact is a new version.\n`);
+    return 1;
+  }
+  writeFileSync(out, `${JSON.stringify(revised, null, 2)}\n`, "utf8");
+
+  const latest = revised.provenance.revisions.at(-1);
+  process.stdout.write(
+    [
+      `Wrote ${out}`,
+      `  ${base.id} v${base.version} -> v${revised.version}, ${revised.approvalState} (needs approval before unattended use)`,
+      ...(latest?.changes ?? []).map((change) => `  - ${change}`),
+      "",
+    ].join("\n"),
+  );
+  return 0;
+}
+
 async function main(argv: string[]): Promise<number> {
   const [command, ...rest] = argv;
 
@@ -343,7 +381,14 @@ async function main(argv: string[]): Promise<number> {
     return 1;
   }
 
-  return command === "discover" ? discover(parseArgs(rest)) : replayCommand(parseArgs(rest));
+  switch (command) {
+    case "discover":
+      return discover(parseArgs(rest));
+    case "replay":
+      return replayCommand(parseArgs(rest));
+    case "revise":
+      return reviseCommand(parseArgs(rest));
+  }
 }
 
 main(process.argv.slice(2)).then(

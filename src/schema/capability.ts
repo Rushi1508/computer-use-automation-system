@@ -26,7 +26,9 @@
  *    recorded against it and by every tenant running it — so outcomes are
  *    merged in from an app profile rather than rediscovered per recording. A
  *    discovery run sees the happy path by construction and could not have
- *    learned them anyway.
+ *    learned them anyway. Outcomes that only mean something at one point in
+ *    one flow ("this member has no savings account") are declared on the
+ *    capability instead, in review, and scoped to the step they answer.
  */
 
 import { z } from "zod";
@@ -71,6 +73,18 @@ export const DetectorSchema = z.discriminatedUnion("kind", [
   }),
   z.object({ kind: z.literal("url_contains"), value: z.string().min(1) }),
   z.object({ kind: z.literal("title_equals"), value: z.string().min(1) }),
+  z.object({
+    kind: z.literal("grid_column"),
+    /**
+     * A data grid with this column header has rendered at least one row.
+     * Structural rather than textual: the word "Balance" also turns up in
+     * banners and prose, a cell under a "Balance" header does not. Use it as
+     * proof that a region has loaded before concluding anything from what is
+     * missing from it.
+     */
+    column: z.string().min(1),
+    framePath: z.array(z.string()).optional(),
+  }),
 ]);
 export type Detector = z.infer<typeof DetectorSchema>;
 
@@ -207,14 +221,61 @@ export type Step = z.infer<typeof StepSchema>;
  * and it is prevented here by giving outcomes their own declared vocabulary
  * with detectors, separate from the failure path entirely.
  */
-export const KnownOutcomeSchema = z.object({
-  code: z.string().regex(/^[A-Z][A-Z0-9_]*$/, "SCREAMING_SNAKE_CASE"),
+const OutcomeCodeSchema = z.string().regex(/^[A-Z][A-Z0-9_]*$/, "SCREAMING_SNAKE_CASE");
+
+export const KnownOutcomeSchema = z.strictObject({
+  code: OutcomeCodeSchema,
   description: z.string().min(1),
   detector: DetectorSchema,
+  /**
+   * Steps at which the detector counts. Omitted means anywhere in the flow.
+   *
+   * Scope an outcome whose text is only an answer at one point: "No open
+   * accounts." ends a balance lookup, but must not end a flow that is about to
+   * open the member's first account.
+   */
+  atSteps: z.array(z.number().int().nonnegative()).min(1).optional(),
   /** Whether reaching this outcome means the flow stops. */
   terminal: z.boolean().default(true),
 });
 export type KnownOutcome = z.infer<typeof KnownOutcomeSchema>;
+
+/**
+ * A legitimate answer recognised by what is not on screen: the member's
+ * accounts are showing, and none of them is a savings account.
+ *
+ * Absence is the most dangerous evidence there is, because "not there yet",
+ * "not there because the page broke" and "not there because there is no such
+ * thing" look identical at a glance. Treating any of the first two as the third
+ * returns a wrong answer to the caller with a success-shaped status. So an
+ * absence outcome requires three things, and a missing target without all
+ * three stays a failure:
+ *
+ *   scope      it applies to one step's target, never to the screen at large
+ *   proof      a positive detector shows the region the target lives in has
+ *              rendered (text_absent is refused: it proves nothing)
+ *   stability  replay sees the absence on consecutive observations
+ *
+ * A locator strategy that matches several elements is not absence. That is
+ * ambiguity, and it is reported as a failure of its own.
+ */
+export const AbsenceOutcomeSchema = z.strictObject({
+  code: OutcomeCodeSchema,
+  description: z.string().min(1),
+  absentTarget: z.strictObject({
+    /** The step whose target's absence is the answer. */
+    step: z.number().int().nonnegative(),
+    screenReady: DetectorSchema.refine(
+      (detector) => detector.kind !== "text_absent",
+      "screenReady must be positive evidence that the screen has rendered; text_absent proves nothing",
+    ),
+  }),
+  terminal: z.literal(true).default(true),
+});
+export type AbsenceOutcome = z.infer<typeof AbsenceOutcomeSchema>;
+
+export const CapabilityOutcomeSchema = z.union([KnownOutcomeSchema, AbsenceOutcomeSchema]);
+export type CapabilityOutcome = z.infer<typeof CapabilityOutcomeSchema>;
 
 // --- The capability ----------------------------------------------------------
 
@@ -272,7 +333,7 @@ export const CapabilitySchema = z.object({
     detector: DetectorSchema,
   }),
 
-  knownOutcomes: z.array(KnownOutcomeSchema).default([]),
+  knownOutcomes: z.array(CapabilityOutcomeSchema).default([]),
 
   provenance: z.object({
     discoveryRunId: z.string().min(1),
@@ -281,7 +342,52 @@ export const CapabilitySchema = z.object({
     recordedAt: z.string().min(1),
     /** Step count of the source trace, so a reviewer can spot compiler drops. */
     tracedSteps: z.number().int().nonnegative(),
+    /**
+     * Reviewed edits made after recording, oldest first. Each one produced a
+     * new version and returned the capability to draft.
+     */
+    revisions: z
+      .array(
+        z.strictObject({
+          version: z.number().int().positive(),
+          revisedAt: z.string().min(1),
+          reviewer: z.string().min(1),
+          summary: z.string().min(1),
+          changes: z.array(z.string().min(1)).min(1),
+        }),
+      )
+      .default([]),
   }),
+}).superRefine((capability, ctx) => {
+  // Rules that span fields. An outcome pointing at a step that does not exist
+  // would never fire, and a silently dead outcome is how a legitimate answer
+  // turns back into a failure.
+  const steps = new Map(capability.steps.map((step) => [step.index, step]));
+  const codes = new Set<string>();
+
+  capability.knownOutcomes.forEach((outcome, i) => {
+    if (codes.has(outcome.code)) {
+      ctx.addIssue({ code: "custom", path: ["knownOutcomes", i, "code"], message: `duplicate outcome code ${outcome.code}` });
+    }
+    codes.add(outcome.code);
+
+    if ("absentTarget" in outcome) {
+      const n = outcome.absentTarget.step;
+      if (steps.get(n)?.target === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["knownOutcomes", i, "absentTarget", "step"],
+          message: `step ${n} does not exist or has no target, so its absence cannot be judged`,
+        });
+      }
+      return;
+    }
+    for (const n of outcome.atSteps ?? []) {
+      if (!steps.has(n)) {
+        ctx.addIssue({ code: "custom", path: ["knownOutcomes", i, "atSteps"], message: `step ${n} does not exist` });
+      }
+    }
+  });
 });
 
 export type Capability = z.infer<typeof CapabilitySchema>;

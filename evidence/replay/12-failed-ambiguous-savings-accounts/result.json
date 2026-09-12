@@ -1,23 +1,29 @@
 {
-  "status": "business_outcome",
-  "outcome": {
-    "code": "MEMBER_NOT_FOUND",
-    "description": "No member exists with the supplied ID. A legitimate answer, not a failure.",
-    "basis": "text \"No member found for ID\" is on screen"
+  "status": "failed",
+  "failure": {
+    "kind": "target_ambiguous",
+    "stepIndex": 5,
+    "stepIntent": "Capture the savings account balance requested by the goal",
+    "expected": "exactly one the \"Balance\" value in the row containing \"Savings\" [grid_cell ambiguous (2 matches); anchored_row ambiguous (4 matches)]",
+    "observed": "a grid with a \"Balance\" column has rendered in frame main, and several elements fit every locator strategy; replay does not guess between them | title \"MERIDIAN CORE\" at http://127.0.0.1:55626/ showing: (top) (no document body; content is in child frames) navmenu text: Navigation link \"Member Search\": /url: /content link \"Account Servicing\": /url: /content link \"Sign Off\": /url: /logout main table: rowgroup: row \"MERIDIAN CORE — Member Servicing\": cell \"MERIDIAN CORE — Member Servicing\" row \"Member 12345\": cell \"Member 12345\" table: rowgroup: row \"Member ID 12345 Name Dolores Abernathy\": cell \"Me…",
+    "escalatable": true,
+    "evidence": {
+      "screenshot": "evidence\\replay\\12-failed-ambiguous-savings-accounts\\screenshots\\failure-step-5.png",
+      "tree": "evidence\\replay\\12-failed-ambiguous-savings-accounts\\failure-step-5-tree.txt"
+    }
   },
-  "atStep": 5,
   "capabilityId": "lookup_member_savings_balance",
   "capabilityVersion": 2,
-  "runId": "02-outcome-member-not-found",
+  "runId": "12-failed-ambiguous-savings-accounts",
   "entrypoint": "http://127.0.0.1:55626/",
-  "startedAt": "2026-09-12T21:06:49.134Z",
-  "elapsedMs": 2690,
+  "startedAt": "2026-09-12T21:07:25.539Z",
+  "elapsedMs": 3348,
   "steps": [
     {
       "index": 0,
       "action": "fill",
       "intent": "Enter operator ID to sign on",
-      "durationMs": 308,
+      "durationMs": 226,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -31,7 +37,7 @@
       "index": 1,
       "action": "fill",
       "intent": "Enter password to sign on",
-      "durationMs": 210,
+      "durationMs": 166,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -45,7 +51,7 @@
       "index": 2,
       "action": "click",
       "intent": "Submit credentials to sign on",
-      "durationMs": 782,
+      "durationMs": 724,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -59,7 +65,7 @@
       "index": 3,
       "action": "fill",
       "intent": "Enter member ID to look up",
-      "durationMs": 306,
+      "durationMs": 243,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -73,7 +79,7 @@
       "index": 4,
       "action": "click",
       "intent": "Search for member {memberId}",
-      "durationMs": 668,
+      "durationMs": 646,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",

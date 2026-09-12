@@ -200,6 +200,12 @@ export function detectorHolds(detector: Detector, obs: Observation): boolean {
       return obs.url.includes(detector.value);
     case "title_equals":
       return obs.title === detector.value;
+    case "grid_column":
+      return obs.elements.some(
+        (el) =>
+          el.grid?.columnHeader === detector.column &&
+          (detector.framePath === undefined || samePath(el.framePath, detector.framePath)),
+      );
   }
 }
 

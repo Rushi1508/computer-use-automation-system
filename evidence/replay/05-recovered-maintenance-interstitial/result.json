@@ -4,17 +4,17 @@
     "savingsBalance": "$14,820.37"
   },
   "capabilityId": "lookup_member_savings_balance",
-  "capabilityVersion": 1,
+  "capabilityVersion": 2,
   "runId": "05-recovered-maintenance-interstitial",
-  "entrypoint": "http://127.0.0.1:56729/",
-  "startedAt": "2026-09-12T20:32:20.390Z",
-  "elapsedMs": 2092,
+  "entrypoint": "http://127.0.0.1:55626/",
+  "startedAt": "2026-09-12T21:06:58.186Z",
+  "elapsedMs": 3801,
   "steps": [
     {
       "index": 0,
       "action": "fill",
       "intent": "Enter operator ID to sign on",
-      "durationMs": 122,
+      "durationMs": 232,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -28,7 +28,7 @@
       "index": 1,
       "action": "fill",
       "intent": "Enter password to sign on",
-      "durationMs": 65,
+      "durationMs": 164,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -42,7 +42,7 @@
       "index": 2,
       "action": "click",
       "intent": "Submit credentials to sign on",
-      "durationMs": 481,
+      "durationMs": 690,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -56,7 +56,7 @@
       "index": 3,
       "action": "fill",
       "intent": "Enter member ID to look up",
-      "durationMs": 451,
+      "durationMs": 736,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -70,7 +70,7 @@
       "index": 4,
       "action": "click",
       "intent": "Search for member {memberId}",
-      "durationMs": 408,
+      "durationMs": 678,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -84,7 +84,7 @@
       "index": 5,
       "action": "read",
       "intent": "Capture the savings account balance requested by the goal",
-      "durationMs": 217,
+      "durationMs": 749,
       "polls": 0,
       "resolvedBy": {
         "kind": "grid_cell",

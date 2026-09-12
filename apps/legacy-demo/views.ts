@@ -17,7 +17,7 @@
  * engine's anchored-relative fallback to be real rather than theoretical.
  */
 
-import { formatUsd, type Member } from "./data.js";
+import { accountsOf, formatUsd, type Member } from "./data.js";
 
 const AMP = String.fromCharCode(38);
 const QUOT = String.fromCharCode(34);
@@ -144,8 +144,9 @@ export function permissionDeniedPage(memberId: string): string {
 // --- Member detail -----------------------------------------------------------
 
 export function memberDetailPage(member: Member): string {
-  const rows = member.accounts.length
-    ? member.accounts
+  const accounts = accountsOf(member);
+  const rows = accounts.length
+    ? accounts
         .map(
           (a) => `<tr><td>${esc(a.number)}</td><td>${esc(a.type)}</td>
 <td align="right">${esc(formatUsd(a.balanceCents))}</td><td>${esc(a.openedOn)}</td></tr>`,

@@ -36,7 +36,7 @@ const ROOT = join("evidence", "handoff");
 const PASSWORD = process.env["MERIDIAN_PASSWORD"] ?? "demo";
 
 const load = (file: string): Capability => parseCapability(JSON.parse(readFileSync(file, "utf8")));
-const LOOKUP = load(join("capabilities", "lookup_member_savings_balance.v1.json"));
+const LOOKUP = load(join("capabilities", "lookup_member_savings_balance.v2.json"));
 const OPEN_ACCOUNT = load(join("capabilities", "open_sub_account.v1.json"));
 
 interface Scenario {

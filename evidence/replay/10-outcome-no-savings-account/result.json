@@ -1,23 +1,23 @@
 {
   "status": "business_outcome",
   "outcome": {
-    "code": "MEMBER_NOT_FOUND",
-    "description": "No member exists with the supplied ID. A legitimate answer, not a failure.",
-    "basis": "text \"No member found for ID\" is on screen"
+    "code": "NO_SAVINGS_ACCOUNT",
+    "description": "The member's accounts are showing, but none of them is a savings account, so there is no savings balance to return.",
+    "basis": "a grid with a \"Balance\" column has rendered in frame main, and no locator strategy found the \"Balance\" value in the row containing \"Savings\" on 2 consecutive observations [grid_cell no match; anchored_row no match]"
   },
   "atStep": 5,
   "capabilityId": "lookup_member_savings_balance",
   "capabilityVersion": 2,
-  "runId": "02-outcome-member-not-found",
+  "runId": "10-outcome-no-savings-account",
   "entrypoint": "http://127.0.0.1:55626/",
-  "startedAt": "2026-09-12T21:06:49.134Z",
-  "elapsedMs": 2690,
+  "startedAt": "2026-09-12T21:07:19.100Z",
+  "elapsedMs": 3004,
   "steps": [
     {
       "index": 0,
       "action": "fill",
       "intent": "Enter operator ID to sign on",
-      "durationMs": 308,
+      "durationMs": 269,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -31,7 +31,7 @@
       "index": 1,
       "action": "fill",
       "intent": "Enter password to sign on",
-      "durationMs": 210,
+      "durationMs": 196,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -45,7 +45,7 @@
       "index": 2,
       "action": "click",
       "intent": "Submit credentials to sign on",
-      "durationMs": 782,
+      "durationMs": 703,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -59,7 +59,7 @@
       "index": 3,
       "action": "fill",
       "intent": "Enter member ID to look up",
-      "durationMs": 306,
+      "durationMs": 239,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -73,7 +73,7 @@
       "index": 4,
       "action": "click",
       "intent": "Search for member {memberId}",
-      "durationMs": 668,
+      "durationMs": 673,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",

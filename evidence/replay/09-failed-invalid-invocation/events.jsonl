@@ -1,2 +1,2 @@
-{"seq":0,"at":"2026-09-12T20:32:33.027Z","kind":"run.start","message":"Replay of lookup_member_savings_balance v1","data":{"entrypoint":"http://127.0.0.1:56729/","approvalState":"draft","escalation":false,"inputs":{"operatorId":"op-[REDACTED]","password":"[REDACTED]","memberId":null}}}
-{"seq":1,"at":"2026-09-12T20:32:33.028Z","kind":"run.end","message":"Replay failed","data":{"status":"failed","steps":0,"recoveries":0,"drift":0,"interventions":0}}
+{"seq":0,"at":"2026-09-12T21:07:18.746Z","kind":"run.start","message":"Replay of lookup_member_savings_balance v2","data":{"entrypoint":"http://127.0.0.1:55626/","approvalState":"draft","escalation":false,"inputs":{"operatorId":"op-[REDACTED]","password":"[REDACTED]","memberId":null}}}
+{"seq":1,"at":"2026-09-12T21:07:18.747Z","kind":"run.end","message":"Replay failed","data":{"status":"failed","steps":0,"recoveries":0,"drift":0,"interventions":0}}

@@ -1,0 +1,25 @@
+{
+  "capabilityId": "lookup_member_savings_balance",
+  "baseVersion": 1,
+  "reviewer": "reviewer-1",
+  "revisedAt": "2026-09-12T21:00:00.000Z",
+  "summary": "Replay review found two legitimate answers reported as failures. A member whose only account is checking, and a closed member with no accounts, both ran out the full step timeout and failed with target_not_found, which with escalation enabled would page a person. Neither is a fault: there is simply no savings balance to return, and the caller needs to know which case applies.",
+  "addOutcomes": [
+    {
+      "code": "NO_OPEN_ACCOUNTS",
+      "description": "The member has no open accounts at all, so there is no savings balance to return.",
+      "detector": { "kind": "text_present", "text": "No open accounts.", "framePath": ["main"] },
+      "atSteps": [5],
+      "terminal": true
+    },
+    {
+      "code": "NO_SAVINGS_ACCOUNT",
+      "description": "The member's accounts are showing, but none of them is a savings account, so there is no savings balance to return.",
+      "absentTarget": {
+        "step": 5,
+        "screenReady": { "kind": "grid_column", "column": "Balance", "framePath": ["main"] }
+      },
+      "terminal": true
+    }
+  ]
+}

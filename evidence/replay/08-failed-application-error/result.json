@@ -5,7 +5,7 @@
     "stepIndex": 5,
     "stepIntent": "Capture the savings account balance requested by the goal",
     "expected": "the application to respond normally",
-    "observed": "application_error: The application returned its generic error page. Waiting will not change that, so replay stops immediately with evidence instead of running out its timeout. | title \"MERIDIAN CORE\" at http://127.0.0.1:56729/ showing: (top) (no document body; content is in child frames) navmenu text: Navigation link \"Member Search\": /url: /content link \"Account Servicing\": /url: /content link \"Sign Off\": /url: /logout main table: rowgroup: row \"MERIDIAN CORE — Member Servicing\": cell \"MERIDIAN CORE — Member Servicing\" row \"Application Error\": cell \"Application Error\" paragraph: Unexpected error processing your request. paragrap…",
+    "observed": "application_error: The application returned its generic error page. Waiting will not change that, so replay stops immediately with evidence instead of running out its timeout. | title \"MERIDIAN CORE\" at http://127.0.0.1:55626/ showing: (top) (no document body; content is in child frames) navmenu text: Navigation link \"Member Search\": /url: /content link \"Account Servicing\": /url: /content link \"Sign Off\": /url: /logout main table: rowgroup: row \"MERIDIAN CORE — Member Servicing\": cell \"MERIDIAN CORE — Member Servicing\" row \"Application Error\": cell \"Application Error\" paragraph: Unexpected error processing your request. paragrap…",
     "escalatable": true,
     "evidence": {
       "screenshot": "evidence\\replay\\08-failed-application-error\\screenshots\\failure-step-5.png",
@@ -13,17 +13,17 @@
     }
   },
   "capabilityId": "lookup_member_savings_balance",
-  "capabilityVersion": 1,
+  "capabilityVersion": 2,
   "runId": "08-failed-application-error",
-  "entrypoint": "http://127.0.0.1:56729/",
-  "startedAt": "2026-09-12T20:32:31.199Z",
-  "elapsedMs": 1598,
+  "entrypoint": "http://127.0.0.1:55626/",
+  "startedAt": "2026-09-12T21:07:15.854Z",
+  "elapsedMs": 2514,
   "steps": [
     {
       "index": 0,
       "action": "fill",
       "intent": "Enter operator ID to sign on",
-      "durationMs": 116,
+      "durationMs": 232,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -37,7 +37,7 @@
       "index": 1,
       "action": "fill",
       "intent": "Enter password to sign on",
-      "durationMs": 64,
+      "durationMs": 154,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -51,7 +51,7 @@
       "index": 2,
       "action": "click",
       "intent": "Submit credentials to sign on",
-      "durationMs": 485,
+      "durationMs": 704,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -65,7 +65,7 @@
       "index": 3,
       "action": "fill",
       "intent": "Enter member ID to look up",
-      "durationMs": 137,
+      "durationMs": 234,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -79,7 +79,7 @@
       "index": 4,
       "action": "click",
       "intent": "Search for member {memberId}",
-      "durationMs": 408,
+      "durationMs": 587,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",

@@ -101,14 +101,25 @@ export function formatUsd(cents: number): string {
 }
 
 /** Sub-accounts opened during a session. In-memory only; reset with the process. */
-const OPENED: Array<{ memberId: string; accountNumber: string; type: string; depositCents: number }> = [];
+const OPENED: Array<{ memberId: string; accountNumber: string; type: string; depositCents: number; openedOn: string }> = [];
 
 export function openSubAccount(memberId: string, type: string, depositCents: number): string {
   const accountNumber = `0009-${String(4000 + OPENED.length).padStart(4, "0")}`;
-  OPENED.push({ memberId, accountNumber, type, depositCents });
+  OPENED.push({ memberId, accountNumber, type, depositCents, openedOn: new Date().toISOString().slice(0, 10) });
   return accountNumber;
 }
 
 export function resetOpenedAccounts(): void {
   OPENED.length = 0;
+}
+
+/** A member's accounts as the application shows them: those on file, plus any opened this session. */
+export function accountsOf(member: Member): Member["accounts"] {
+  const opened = OPENED.filter((o) => o.memberId === member.id).map((o) => ({
+    number: o.accountNumber,
+    type: o.type as Member["accounts"][number]["type"],
+    balanceCents: o.depositCents,
+    openedOn: o.openedOn,
+  }));
+  return [...member.accounts, ...opened];
 }

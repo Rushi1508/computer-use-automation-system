@@ -1,31 +1,31 @@
-{"seq":0,"at":"2026-09-12T20:32:22.765Z","kind":"run.start","message":"Replay of lookup_member_savings_balance v1","data":{"entrypoint":"http://127.0.0.1:56729/","approvalState":"draft","escalation":false,"inputs":{"operatorId":"op-[REDACTED]","password":"[REDACTED]","memberId":"12345"}}}
-{"seq":1,"at":"2026-09-12T20:32:22.766Z","kind":"policy.decision","message":"Entrypoint allow","data":{"verdict":"allow","rule":"url-allowlist","reason":"http://127.0.0.1:56729/ is permitted."}}
-{"seq":2,"at":"2026-09-12T20:32:23.041Z","kind":"action.start","message":"Step 0: fill","data":{"intent":"Enter operator ID to sign on","target":"the textbox \"Operator ID\"","reauthentication":"[REDACTED]"}}
-{"seq":3,"at":"2026-09-12T20:32:23.127Z","kind":"policy.decision","message":"fill: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
-{"seq":4,"at":"2026-09-12T20:32:23.162Z","kind":"action.start","message":"Step 1: fill","data":{"intent":"Enter password to sign on","target":"the textbox \"Password\"","reauthentication":"[REDACTED]"}}
-{"seq":5,"at":"2026-09-12T20:32:23.192Z","kind":"policy.decision","message":"fill: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
-{"seq":6,"at":"2026-09-12T20:32:23.225Z","kind":"action.start","message":"Step 2: click","data":{"intent":"Submit credentials to sign on","target":"the button \"Sign On\"","reauthentication":"[REDACTED]"}}
-{"seq":7,"at":"2026-09-12T20:32:23.252Z","kind":"policy.decision","message":"click: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
-{"seq":8,"at":"2026-09-12T20:32:23.728Z","kind":"action.start","message":"Step 3: fill","data":{"intent":"Enter member ID to look up","target":"the textbox \"Member ID\"","reauthentication":"[REDACTED]"}}
-{"seq":9,"at":"2026-09-12T20:32:23.774Z","kind":"policy.decision","message":"fill: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
-{"seq":10,"at":"2026-09-12T20:32:23.827Z","kind":"action.start","message":"Step 4: click","data":{"intent":"Search for member {memberId}","target":"the button \"Search\"","reauthentication":"[REDACTED]"}}
-{"seq":11,"at":"2026-09-12T20:32:23.874Z","kind":"policy.decision","message":"click: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
-{"seq":12,"at":"2026-09-12T20:32:24.248Z","kind":"action.start","message":"Step 5: read","data":{"intent":"Capture the savings account balance requested by the goal","target":"the \"Balance\" value in the row containing \"Savings\"","reauthentication":"[REDACTED]"}}
-{"seq":13,"at":"2026-09-12T20:32:24.295Z","kind":"recovery","message":"session_expired: re-running authentication steps 0-2, then resuming at step 3","data":{"id":"session_expired","atStep":5,"remedy":"reauthenticate","attempt":1,"detail":"re-running authentication steps 0-2, then resuming at step 3"}}
-{"seq":14,"at":"2026-09-12T20:32:24.296Z","kind":"policy.decision","message":"Entrypoint allow","data":{"verdict":"allow","rule":"url-allowlist","reason":"http://127.0.0.1:56729/ is permitted."}}
-{"seq":15,"at":"2026-09-12T20:32:24.564Z","kind":"action.start","message":"Step 0: fill","data":{"intent":"Enter operator ID to sign on","target":"the textbox \"Operator ID\"","reauthentication":"[REDACTED]"}}
-{"seq":16,"at":"2026-09-12T20:32:24.639Z","kind":"policy.decision","message":"fill: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
-{"seq":17,"at":"2026-09-12T20:32:24.672Z","kind":"action.start","message":"Step 1: fill","data":{"intent":"Enter password to sign on","target":"the textbox \"Password\"","reauthentication":"[REDACTED]"}}
-{"seq":18,"at":"2026-09-12T20:32:24.702Z","kind":"policy.decision","message":"fill: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
-{"seq":19,"at":"2026-09-12T20:32:24.736Z","kind":"action.start","message":"Step 2: click","data":{"intent":"Submit credentials to sign on","target":"the button \"Sign On\"","reauthentication":"[REDACTED]"}}
-{"seq":20,"at":"2026-09-12T20:32:24.768Z","kind":"policy.decision","message":"click: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
-{"seq":21,"at":"2026-09-12T20:32:25.223Z","kind":"action.start","message":"Step 3: fill","data":{"intent":"Enter member ID to look up","target":"the textbox \"Member ID\"","reauthentication":"[REDACTED]"}}
-{"seq":22,"at":"2026-09-12T20:32:25.268Z","kind":"policy.decision","message":"fill: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
-{"seq":23,"at":"2026-09-12T20:32:25.318Z","kind":"action.start","message":"Step 4: click","data":{"intent":"Search for member {memberId}","target":"the button \"Search\"","reauthentication":"[REDACTED]"}}
-{"seq":24,"at":"2026-09-12T20:32:25.366Z","kind":"policy.decision","message":"click: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
-{"seq":25,"at":"2026-09-12T20:32:25.775Z","kind":"action.start","message":"Step 5: read","data":{"intent":"Capture the savings account balance requested by the goal","target":"the \"Balance\" value in the row containing \"Savings\"","reauthentication":"[REDACTED]"}}
-{"seq":26,"at":"2026-09-12T20:32:25.862Z","kind":"policy.decision","message":"read: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
-{"seq":27,"at":"2026-09-12T20:32:25.958Z","kind":"extraction","message":"Read savingsBalance","data":{"value":"$14,820.37"}}
-{"seq":28,"at":"2026-09-12T20:32:26.042Z","kind":"checkpoint","message":"Checkpoint after step 5 verified","data":{"kind":"text_present","text":"Account"}}
-{"seq":29,"at":"2026-09-12T20:32:26.119Z","kind":"checkpoint","message":"Success checkpoint verified","data":{"kind":"text_present","text":"Balance"}}
-{"seq":30,"at":"2026-09-12T20:32:26.119Z","kind":"run.end","message":"Replay succeeded","data":{"status":"succeeded","steps":11,"recoveries":1,"drift":0,"interventions":0}}
+{"seq":0,"at":"2026-09-12T21:07:02.424Z","kind":"run.start","message":"Replay of lookup_member_savings_balance v2","data":{"entrypoint":"http://127.0.0.1:55626/","approvalState":"draft","escalation":false,"inputs":{"operatorId":"op-[REDACTED]","password":"[REDACTED]","memberId":"12345"}}}
+{"seq":1,"at":"2026-09-12T21:07:02.426Z","kind":"policy.decision","message":"Entrypoint allow","data":{"verdict":"allow","rule":"url-allowlist","reason":"http://127.0.0.1:55626/ is permitted."}}
+{"seq":2,"at":"2026-09-12T21:07:02.711Z","kind":"action.start","message":"Step 0: fill","data":{"intent":"Enter operator ID to sign on","target":"the textbox \"Operator ID\"","reauthentication":"[REDACTED]"}}
+{"seq":3,"at":"2026-09-12T21:07:02.864Z","kind":"policy.decision","message":"fill: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
+{"seq":4,"at":"2026-09-12T21:07:02.943Z","kind":"action.start","message":"Step 1: fill","data":{"intent":"Enter password to sign on","target":"the textbox \"Password\"","reauthentication":"[REDACTED]"}}
+{"seq":5,"at":"2026-09-12T21:07:03.025Z","kind":"policy.decision","message":"fill: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
+{"seq":6,"at":"2026-09-12T21:07:03.106Z","kind":"action.start","message":"Step 2: click","data":{"intent":"Submit credentials to sign on","target":"the button \"Sign On\"","reauthentication":"[REDACTED]"}}
+{"seq":7,"at":"2026-09-12T21:07:03.171Z","kind":"policy.decision","message":"click: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
+{"seq":8,"at":"2026-09-12T21:07:03.810Z","kind":"action.start","message":"Step 3: fill","data":{"intent":"Enter member ID to look up","target":"the textbox \"Member ID\"","reauthentication":"[REDACTED]"}}
+{"seq":9,"at":"2026-09-12T21:07:03.935Z","kind":"policy.decision","message":"fill: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
+{"seq":10,"at":"2026-09-12T21:07:04.063Z","kind":"action.start","message":"Step 4: click","data":{"intent":"Search for member {memberId}","target":"the button \"Search\"","reauthentication":"[REDACTED]"}}
+{"seq":11,"at":"2026-09-12T21:07:04.190Z","kind":"policy.decision","message":"click: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
+{"seq":12,"at":"2026-09-12T21:07:04.717Z","kind":"action.start","message":"Step 5: read","data":{"intent":"Capture the savings account balance requested by the goal","target":"the \"Balance\" value in the row containing \"Savings\"","reauthentication":"[REDACTED]"}}
+{"seq":13,"at":"2026-09-12T21:07:04.838Z","kind":"recovery","message":"session_expired: re-running authentication steps 0-2, then resuming at step 3","data":{"id":"session_expired","atStep":5,"remedy":"reauthenticate","attempt":1,"detail":"re-running authentication steps 0-2, then resuming at step 3"}}
+{"seq":14,"at":"2026-09-12T21:07:04.839Z","kind":"policy.decision","message":"Entrypoint allow","data":{"verdict":"allow","rule":"url-allowlist","reason":"http://127.0.0.1:55626/ is permitted."}}
+{"seq":15,"at":"2026-09-12T21:07:05.130Z","kind":"action.start","message":"Step 0: fill","data":{"intent":"Enter operator ID to sign on","target":"the textbox \"Operator ID\"","reauthentication":"[REDACTED]"}}
+{"seq":16,"at":"2026-09-12T21:07:05.306Z","kind":"policy.decision","message":"fill: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
+{"seq":17,"at":"2026-09-12T21:07:05.398Z","kind":"action.start","message":"Step 1: fill","data":{"intent":"Enter password to sign on","target":"the textbox \"Password\"","reauthentication":"[REDACTED]"}}
+{"seq":18,"at":"2026-09-12T21:07:05.492Z","kind":"policy.decision","message":"fill: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
+{"seq":19,"at":"2026-09-12T21:07:05.597Z","kind":"action.start","message":"Step 2: click","data":{"intent":"Submit credentials to sign on","target":"the button \"Sign On\"","reauthentication":"[REDACTED]"}}
+{"seq":20,"at":"2026-09-12T21:07:05.697Z","kind":"policy.decision","message":"click: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
+{"seq":21,"at":"2026-09-12T21:07:06.578Z","kind":"action.start","message":"Step 3: fill","data":{"intent":"Enter member ID to look up","target":"the textbox \"Member ID\"","reauthentication":"[REDACTED]"}}
+{"seq":22,"at":"2026-09-12T21:07:06.729Z","kind":"policy.decision","message":"fill: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
+{"seq":23,"at":"2026-09-12T21:07:06.912Z","kind":"action.start","message":"Step 4: click","data":{"intent":"Search for member {memberId}","target":"the button \"Search\"","reauthentication":"[REDACTED]"}}
+{"seq":24,"at":"2026-09-12T21:07:07.079Z","kind":"policy.decision","message":"click: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
+{"seq":25,"at":"2026-09-12T21:07:07.711Z","kind":"action.start","message":"Step 5: read","data":{"intent":"Capture the savings account balance requested by the goal","target":"the \"Balance\" value in the row containing \"Savings\"","reauthentication":"[REDACTED]"}}
+{"seq":26,"at":"2026-09-12T21:07:07.956Z","kind":"policy.decision","message":"read: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
+{"seq":27,"at":"2026-09-12T21:07:08.224Z","kind":"extraction","message":"Read savingsBalance","data":{"value":"$14,820.37"}}
+{"seq":28,"at":"2026-09-12T21:07:08.450Z","kind":"checkpoint","message":"Checkpoint after step 5 verified","data":{"kind":"text_present","text":"Account"}}
+{"seq":29,"at":"2026-09-12T21:07:08.698Z","kind":"checkpoint","message":"Success checkpoint verified","data":{"kind":"text_present","text":"Balance"}}
+{"seq":30,"at":"2026-09-12T21:07:08.699Z","kind":"run.end","message":"Replay succeeded","data":{"status":"succeeded","steps":11,"recoveries":1,"drift":0,"interventions":0}}

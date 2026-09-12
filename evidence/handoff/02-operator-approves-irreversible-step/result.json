@@ -6,15 +6,15 @@
   "capabilityId": "open_sub_account",
   "capabilityVersion": 1,
   "runId": "02-operator-approves-irreversible-step",
-  "entrypoint": "http://127.0.0.1:64026/",
-  "startedAt": "2026-09-12T20:31:37.961Z",
-  "elapsedMs": 3300,
+  "entrypoint": "http://127.0.0.1:51306/",
+  "startedAt": "2026-09-12T21:07:49.204Z",
+  "elapsedMs": 6507,
   "steps": [
     {
       "index": 0,
       "action": "fill",
       "intent": "Enter the operator ID to sign on",
-      "durationMs": 130,
+      "durationMs": 270,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -28,7 +28,7 @@
       "index": 1,
       "action": "fill",
       "intent": "Enter the password to sign on",
-      "durationMs": 67,
+      "durationMs": 201,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -42,7 +42,7 @@
       "index": 2,
       "action": "click",
       "intent": "Submit the sign-on form",
-      "durationMs": 486,
+      "durationMs": 717,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -56,7 +56,7 @@
       "index": 3,
       "action": "fill",
       "intent": "Enter the member ID to look up",
-      "durationMs": 106,
+      "durationMs": 247,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -70,7 +70,7 @@
       "index": 4,
       "action": "click",
       "intent": "Search for the member",
-      "durationMs": 429,
+      "durationMs": 699,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -84,7 +84,7 @@
       "index": 5,
       "action": "click",
       "intent": "Open the sub-account form for this member",
-      "durationMs": 457,
+      "durationMs": 809,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -98,7 +98,7 @@
       "index": 6,
       "action": "select",
       "intent": "Choose the account type",
-      "durationMs": 112,
+      "durationMs": 394,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -112,7 +112,7 @@
       "index": 7,
       "action": "fill",
       "intent": "Enter the initial deposit",
-      "durationMs": 112,
+      "durationMs": 389,
       "polls": 0,
       "resolvedBy": {
         "kind": "anchored_row",
@@ -126,7 +126,7 @@
       "index": 8,
       "action": "click",
       "intent": "Open the account",
-      "durationMs": 928,
+      "durationMs": 1921,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -140,7 +140,7 @@
       "index": 9,
       "action": "read",
       "intent": "Read the new account number from the confirmation",
-      "durationMs": 134,
+      "durationMs": 394,
       "polls": 0,
       "resolvedBy": {
         "kind": "anchored_row",
@@ -163,7 +163,7 @@
       "resolution": "approve",
       "note": "Checked the form before approving: Savings account, deposit 500.00.",
       "operatorActions": 0,
-      "pausedMs": 434
+      "pausedMs": 975
     }
   ]
 }
