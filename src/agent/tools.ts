@@ -114,14 +114,30 @@ const MAX_TREE_CHARS = 3500;
  * whole reason anchors are captured at observation time.
  */
 export function renderObservation(obs: Observation): string {
+  const controls = obs.elements.filter((e) => e.actionable);
+  const values = obs.elements.filter((e) => !e.actionable);
+
   const lines: string[] = [`URL: ${obs.url}`, `TITLE: ${obs.title}`, "", "CONTROLS (act by node id):"];
 
-  if (obs.elements.length === 0) {
+  if (controls.length === 0) {
     lines.push("  (no interactive controls found)");
   }
-
-  for (const el of obs.elements) {
+  for (const el of controls) {
     lines.push(`  ${describeElement(el)}`);
+  }
+
+  if (values.length > 0) {
+    lines.push("", "VALUES (read-only; use read to capture one as an output):");
+    for (const el of values) {
+      lines.push(`  ${describeElement(el)}`);
+    }
+  }
+
+  if (obs.warnings.length > 0) {
+    // Surfaced rather than hidden: a partially-read screen must not look like
+    // an empty one, or the agent will draw the wrong conclusion about the app.
+    lines.push("", "WARNINGS (parts of this screen could not be read):");
+    for (const w of obs.warnings) lines.push(`  ! ${w}`);
   }
 
   const tree =
@@ -135,6 +151,12 @@ export function renderObservation(obs: Observation): string {
 
 export function describeElement(el: ObservedElement): string {
   const frame = el.framePath.length === 0 ? "top" : el.framePath.join("/");
+
+  if (!el.actionable) {
+    const label = el.anchorText !== null ? `${el.anchorText}: ` : "";
+    return `[${el.nodeId}] value ${label}"${el.value ?? ""}" (frame: ${frame})`;
+  }
+
   const name = el.name !== "" ? `"${el.name}"` : "(unnamed)";
   const anchor = el.name === "" && el.anchorText !== null ? ` anchor="${el.anchorText}"` : "";
   const value = el.value !== null && el.value !== "" ? ` value="${el.value}"` : "";
@@ -145,6 +167,8 @@ export function describeElement(el: ObservedElement): string {
 export const SYSTEM_PROMPT = `You are operating a legacy back-office banking application on behalf of a human operator, through an accessibility-tree interface.
 
 You will be shown the current screen as a list of CONTROLS plus an accessibility tree. Act by referring to a control's node id. Node ids are reassigned after every action, so always use ids from the most recent observation.
+
+The VALUES section lists static text on the screen — balances, names, statuses. Use read on a VALUES node to capture it as a named output of the capability. You cannot click or type into a VALUES node.
 
 Some controls have no accessible name. They are shown as (unnamed) with an anchor, which is the text of the neighbouring cell that identifies them to a human. Point at them by node id like any other control.
 

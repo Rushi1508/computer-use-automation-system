@@ -28,6 +28,15 @@ export type FramePath = readonly string[];
  */
 export interface ObservedElement {
   readonly nodeId: number;
+  /**
+   * Whether this node can be operated, or only read.
+   *
+   * Legacy screens present most of their information as static table text, so
+   * an observation limited to actionable controls cannot address the very
+   * values a capability exists to return. Readable nodes close that gap: they
+   * are valid targets for `read` and nothing else.
+   */
+  readonly actionable: boolean;
   readonly role: string;
   /**
    * The accessible name, as a screen reader would announce it. Empty string is
@@ -71,6 +80,15 @@ export interface Observation {
    */
   readonly tree: string;
   readonly capturedAt: string;
+  /**
+   * Frames that could not be read, and why.
+   *
+   * An observation that silently drops a frame is indistinguishable from a
+   * blank screen, which leads an agent to conclude the application is broken
+   * and escalate — or worse, to act on a partial view believing it is complete.
+   * Failures are surfaced rather than swallowed.
+   */
+  readonly warnings: readonly string[];
 }
 
 /** Action verbs. Shared with the artifact schema so recorded steps use one vocabulary. */

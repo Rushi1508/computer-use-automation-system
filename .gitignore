@@ -42,3 +42,8 @@ npm-debug.log*
 # interface.ai's take-home document. Kept locally for reference, not published
 # to a public repo — it is their material to distribute, not ours.
 docs/
+
+# Stray files from shell-quoting accidents on Windows (command fragments that
+# got interpreted as redirect targets).
+console.log*
+src.includes*

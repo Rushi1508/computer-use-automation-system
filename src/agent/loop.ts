@@ -18,6 +18,7 @@ import type { Action, ObservedElement, Surface } from "../perception/types.js";
 import type { PolicyEngine } from "../policy/engine.js";
 import type { PolicyDecision } from "../policy/types.js";
 import type { EvidenceBus } from "../evidence/bus.js";
+import { CostAccountant } from "./cost.js";
 import { renderObservation, SYSTEM_PROMPT, toolDefinitions, TOOL_SCHEMAS, type ToolName } from "./tools.js";
 
 export interface TraceStep {
@@ -49,6 +50,7 @@ export interface DiscoveryResult {
   readonly outputs: Readonly<Record<string, string>>;
   readonly steps: number;
   readonly elapsedMs: number;
+  readonly usage: { readonly turns: number; readonly costUsd: number; readonly cacheWorking: boolean };
 }
 
 /**
@@ -79,6 +81,8 @@ export interface DiscoveryOptions {
   readonly model?: string;
   readonly effort?: "low" | "medium" | "high" | "xhigh" | "max";
   readonly onConfirm?: ConfirmHandler;
+  /** Hard ceiling on estimated model spend, in USD. The loop stops when reached. */
+  readonly maxCostUsd?: number;
 }
 
 /**
@@ -132,9 +136,11 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
     model = process.env["ANTHROPIC_MODEL"] ?? "claude-opus-5",
     effort = (process.env["ANTHROPIC_EFFORT"] as DiscoveryOptions["effort"]) ?? "high",
     onConfirm = denyByDefault,
+    maxCostUsd = Number(process.env["MAX_RUN_COST_USD"] ?? 0.75),
   } = options;
 
   const client = createClient();
+  const accountant = new CostAccountant(model);
   const startedAt = Date.now();
   const trace: TraceStep[] = [];
   const checkpoints: { afterStep: number; description: string }[] = [];
@@ -157,6 +163,7 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
       outputs,
       steps: 0,
       elapsedMs: Date.now() - startedAt,
+      usage: { turns: 0, costUsd: 0, cacheWorking: false },
     };
     evidence.writeResult(result);
     return result;
@@ -192,14 +199,35 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
       break;
     }
 
+    if (accountant.costUsd >= maxCostUsd) {
+      status = "budget_exhausted";
+      summary = `Spend ceiling of $${maxCostUsd.toFixed(2)} reached (${accountant.summary()}).`;
+      evidence.emit("run.end", summary, accountant.totals);
+      break;
+    }
+
     const response = await client.messages.create({
       model,
-      max_tokens: 16_000,
-      system: SYSTEM_PROMPT,
+      max_tokens: 8_000,
+      // Cache breakpoint on the system block. Tools render before system, so
+      // this one marker caches the tool definitions and the system prompt
+      // together — the stable prefix that would otherwise be re-billed in full
+      // on every turn of the loop.
+      system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
+      // Auto-placed breakpoint on the last cacheable block, so the growing
+      // conversation history is cached incrementally as well.
+      cache_control: { type: "ephemeral" },
       thinking: { type: "adaptive" },
       output_config: { effort },
       tools: toolDefinitions(),
       messages,
+    });
+
+    accountant.add(response.usage);
+    evidence.emit("model.decision", `Turn ${accountant.totals.turns}`, {
+      stopReason: response.stop_reason,
+      usage: response.usage,
+      runningCostUsd: Number(accountant.costUsd.toFixed(5)),
     });
 
     if (response.stop_reason === "refusal") {
@@ -414,6 +442,11 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
     outputs,
     steps: trace.length,
     elapsedMs: Date.now() - startedAt,
+    usage: {
+      turns: accountant.totals.turns,
+      costUsd: Number(accountant.costUsd.toFixed(5)),
+      cacheWorking: accountant.cacheIsWorking,
+    },
   };
 
   if (status !== "succeeded") {
@@ -422,7 +455,13 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
     evidence.saveSnapshot("final-tree", observation.tree);
   }
 
-  evidence.emit("run.end", `Discovery ${status}`, { status, steps: trace.length, outputs });
+  evidence.emit("run.end", `Discovery ${status} | ${accountant.summary()}`, {
+    status,
+    steps: trace.length,
+    outputs,
+    usage: accountant.totals,
+    costUsd: Number(accountant.costUsd.toFixed(5)),
+  });
   evidence.writeResult(result);
   return result;
 }

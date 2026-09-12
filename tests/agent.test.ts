@@ -19,6 +19,7 @@ function element(overrides: Partial<ObservedElement> = {}): ObservedElement {
     enabled: true,
     visible: true,
     framePath: ["main"],
+    actionable: true,
     anchorText: null,
     hints: { tag: "input", inputType: "text", domId: null, fieldName: "memberId" },
     ...overrides,
@@ -79,6 +80,7 @@ describe("observation rendering", () => {
       framePaths: [["main"]],
       elements: [element({ nodeId: 0 }), element({ nodeId: 1, role: "button", name: "Search" })],
       tree: "- textbox 'Member ID'",
+      warnings: [],
       capturedAt: new Date().toISOString(),
     };
     const rendered = renderObservation(obs);
@@ -96,6 +98,7 @@ describe("observation rendering", () => {
       framePaths: [],
       elements: [],
       tree: "x".repeat(10_000),
+      warnings: [],
       capturedAt: new Date().toISOString(),
     };
     const rendered = renderObservation(obs);

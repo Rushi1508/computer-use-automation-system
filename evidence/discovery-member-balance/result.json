@@ -1,0 +1,245 @@
+{
+  "status": "succeeded",
+  "summary": "Signed on as op-[REDACTED], searched member 12345 (Dolores Abernathy), and read savings balance: $14,820.37 (account 0002-8891).",
+  "goal": "Sign on with operator ID 'op-[REDACTED]' and password '[REDACTED]', then look up member 12345 and read their current savings balance.",
+  "entrypoint": "http://127.0.0.1:4173/",
+  "trace": [
+    {
+      "index": 0,
+      "intent": "Enter operator ID to sign on",
+      "action": {
+        "kind": "fill",
+        "nodeId": 0,
+        "value": "op-[REDACTED]"
+      },
+      "target": {
+        "nodeId": 0,
+        "actionable": true,
+        "role": "textbox",
+        "name": "Operator ID",
+        "value": "",
+        "enabled": true,
+        "visible": true,
+        "framePath": [],
+        "anchorText": "Operator ID",
+        "hints": {
+          "tag": "input",
+          "inputType": "text",
+          "domId": "ctl00_txtOperator",
+          "fieldName": "operator"
+        }
+      },
+      "urlBefore": "http://127.0.0.1:4173/",
+      "titleBefore": "Sign On",
+      "urlAfter": "http://127.0.0.1:4173/",
+      "policy": {
+        "verdict": "allow",
+        "rule": "risk-classification",
+        "reason": "Action is reversible and read-only in effect."
+      },
+      "ok": true,
+      "at": "2026-09-12T01:43:59.084Z"
+    },
+    {
+      "index": 1,
+      "intent": "Enter password to sign on",
+      "action": {
+        "kind": "fill",
+        "nodeId": 1,
+        "value": "[REDACTED]"
+      },
+      "target": {
+        "nodeId": 1,
+        "actionable": true,
+        "role": "textbox",
+        "name": "Password",
+        "value": "",
+        "enabled": true,
+        "visible": true,
+        "framePath": [],
+        "anchorText": "Password",
+        "hints": {
+          "tag": "input",
+          "inputType": "password",
+          "domId": "ctl00_txtPass",
+          "fieldName": "password"
+        }
+      },
+      "urlBefore": "http://127.0.0.1:4173/",
+      "titleBefore": "Sign On",
+      "urlAfter": "http://127.0.0.1:4173/",
+      "policy": {
+        "verdict": "allow",
+        "rule": "risk-classification",
+        "reason": "Action is reversible and read-only in effect."
+      },
+      "ok": true,
+      "at": "2026-09-12T01:43:59.131Z"
+    },
+    {
+      "index": 2,
+      "intent": "Submit credentials to sign on",
+      "action": {
+        "kind": "click",
+        "nodeId": 2
+      },
+      "target": {
+        "nodeId": 2,
+        "actionable": true,
+        "role": "button",
+        "name": "Sign On",
+        "value": "Sign On",
+        "enabled": true,
+        "visible": true,
+        "framePath": [],
+        "anchorText": null,
+        "hints": {
+          "tag": "input",
+          "inputType": "submit",
+          "domId": null,
+          "fieldName": null
+        }
+      },
+      "urlBefore": "http://127.0.0.1:4173/",
+      "titleBefore": "Sign On",
+      "urlAfter": "http://127.0.0.1:4173/",
+      "policy": {
+        "verdict": "allow",
+        "rule": "risk-classification",
+        "reason": "Action is reversible and read-only in effect."
+      },
+      "ok": true,
+      "at": "2026-09-12T01:44:03.462Z"
+    },
+    {
+      "index": 3,
+      "intent": "Enter member ID to look up",
+      "action": {
+        "kind": "fill",
+        "nodeId": 3,
+        "value": "12345"
+      },
+      "target": {
+        "nodeId": 3,
+        "actionable": true,
+        "role": "textbox",
+        "name": "Member ID",
+        "value": "",
+        "enabled": true,
+        "visible": true,
+        "framePath": [
+          "main"
+        ],
+        "anchorText": "Member ID",
+        "hints": {
+          "tag": "input",
+          "inputType": "text",
+          "domId": "ctl00_MainContent_txtMemberId",
+          "fieldName": "memberId"
+        }
+      },
+      "urlBefore": "http://127.0.0.1:4173/",
+      "titleBefore": "MERIDIAN CORE",
+      "urlAfter": "http://127.0.0.1:4173/",
+      "policy": {
+        "verdict": "allow",
+        "rule": "risk-classification",
+        "reason": "Action is reversible and read-only in effect."
+      },
+      "ok": true,
+      "at": "2026-09-12T01:44:07.512Z"
+    },
+    {
+      "index": 4,
+      "intent": "Search for member 12345",
+      "action": {
+        "kind": "click",
+        "nodeId": 4
+      },
+      "target": {
+        "nodeId": 4,
+        "actionable": true,
+        "role": "button",
+        "name": "Search",
+        "value": "Search",
+        "enabled": true,
+        "visible": true,
+        "framePath": [
+          "main"
+        ],
+        "anchorText": "Member ID",
+        "hints": {
+          "tag": "input",
+          "inputType": "submit",
+          "domId": null,
+          "fieldName": null
+        }
+      },
+      "urlBefore": "http://127.0.0.1:4173/",
+      "titleBefore": "MERIDIAN CORE",
+      "urlAfter": "http://127.0.0.1:4173/",
+      "policy": {
+        "verdict": "allow",
+        "rule": "risk-classification",
+        "reason": "Action is reversible and read-only in effect."
+      },
+      "ok": true,
+      "at": "2026-09-12T01:44:11.966Z"
+    },
+    {
+      "index": 5,
+      "intent": "Capture the savings account balance requested by the goal",
+      "action": {
+        "kind": "read",
+        "nodeId": 25
+      },
+      "target": {
+        "nodeId": 25,
+        "actionable": false,
+        "role": "text",
+        "name": "",
+        "value": "$14,820.37",
+        "enabled": true,
+        "visible": true,
+        "framePath": [
+          "main"
+        ],
+        "anchorText": "Savings",
+        "hints": {
+          "tag": "td",
+          "inputType": null,
+          "domId": null,
+          "fieldName": null
+        }
+      },
+      "urlBefore": "http://127.0.0.1:4173/",
+      "titleBefore": "MERIDIAN CORE",
+      "urlAfter": "http://127.0.0.1:4173/",
+      "policy": {
+        "verdict": "allow",
+        "rule": "risk-classification",
+        "reason": "Action is reversible and read-only in effect."
+      },
+      "ok": true,
+      "outputName": "savingsBalance",
+      "extracted": "$14,820.37",
+      "at": "2026-09-12T01:44:16.021Z"
+    }
+  ],
+  "checkpoints": [
+    {
+      "afterStep": 5,
+      "description": "Member 12345 (Dolores Abernathy) detail page shown with savings account 0002-8891 balance $14,820.37"
+    }
+  ],
+  "outputs": {
+    "savingsBalance": "$14,820.37"
+  },
+  "steps": 6,
+  "elapsedMs": 24176,
+  "usage": {
+    "turns": 7,
+    "costUsd": 0.08546,
+    "cacheWorking": true
+  }
+}

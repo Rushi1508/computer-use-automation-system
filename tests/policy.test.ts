@@ -19,6 +19,7 @@ function element(overrides: Partial<ObservedElement> = {}): ObservedElement {
     enabled: true,
     visible: true,
     framePath: ["main"],
+    actionable: true,
     anchorText: null,
     hints: { tag: "input", inputType: "submit", domId: null, fieldName: null },
     ...overrides,

@@ -41,6 +41,8 @@ discover options:
   --headed             Show the browser window
   --allow-risky        Auto-approve irreversible actions instead of refusing them.
                        Use only for a supervised recording run.
+  --max-cost <usd>     Hard ceiling on estimated model spend (default 0.75)
+  --effort <level>     low|medium|high|xhigh|max (default from ANTHROPIC_EFFORT)
 `;
 }
 
@@ -95,6 +97,10 @@ async function discover(args: Args): Promise<number> {
       maxSteps: Number(args.values.get("max-steps") ?? 30),
       maxMs: Number(args.values.get("max-ms") ?? 300_000),
       onConfirm: args.flags.has("allow-risky") ? autoApprove : denyByDefault,
+      maxCostUsd: Number(args.values.get("max-cost") ?? 0.75),
+      ...(args.values.has("effort")
+        ? { effort: args.values.get("effort") as "low" | "medium" | "high" | "xhigh" | "max" }
+        : {}),
     });
 
     process.stdout.write(
@@ -104,6 +110,8 @@ async function discover(args: Args): Promise<number> {
         `Summary:  ${result.summary}`,
         `Steps:    ${result.steps}`,
         `Elapsed:  ${(result.elapsedMs / 1000).toFixed(1)}s`,
+        `Model:    ${result.usage.turns} turns, ~$${result.usage.costUsd.toFixed(4)}` +
+          (result.usage.cacheWorking ? " (prompt cache active)" : " (NO cache reads - prefix is being invalidated)"),
         `Outputs:  ${Object.keys(result.outputs).length === 0 ? "(none)" : ""}`,
         ...Object.entries(result.outputs).map(([k, v]) => `  ${k} = ${v}`),
         "",
