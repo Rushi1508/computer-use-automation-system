@@ -9,7 +9,11 @@
 
 import "dotenv/config";
 
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { autoApprove, denyByDefault, runDiscovery } from "./agent/loop.js";
+import { compile } from "./compiler/compile.js";
 import { EvidenceBus, newRunId } from "./evidence/bus.js";
 import { launchWebSurface } from "./perception/web-playwright.js";
 import { PolicyEngine } from "./policy/engine.js";
@@ -43,6 +47,9 @@ discover options:
                        Use only for a supervised recording run.
   --max-cost <usd>     Hard ceiling on estimated model spend (default 0.75)
   --effort <level>     low|medium|high|xhigh|max (default from ANTHROPIC_EFFORT)
+  --capability <id>    snake_case id for the emitted artifact (enables compilation)
+  --app-profile <id>   Application profile supplying the outcome vocabulary
+                       (default meridian_core)
 `;
 }
 
@@ -123,6 +130,36 @@ async function discover(args: Args): Promise<number> {
         "",
       ].join("\n"),
     );
+
+    // Compilation is deliberately separate from the run: a trace is a record of
+    // one exploration, an artifact is a reusable contract, and keeping the
+    // boundary visible means a recording can be re-compiled without re-running
+    // the model.
+    const capabilityId = args.values.get("capability");
+    if (result.status === "succeeded" && capabilityId !== undefined) {
+      const { capability, notes } = compile(result, {
+        id: capabilityId,
+        name: capabilityId.replace(/_/g, " "),
+        description: result.summary,
+        appProfileId: args.values.get("app-profile") ?? "meridian_core",
+      });
+
+      const file = join("capabilities", `${capability.id}.v${capability.version}.json`);
+      writeFileSync(file, JSON.stringify(capability, null, 2), "utf8");
+
+      process.stdout.write(
+        [
+          `Artifact: ${file}`,
+          `  inputs:  ${capability.inputs.map((i) => `${i.name}:${i.type}(${i.sensitivity})`).join(", ") || "(none)"}`,
+          `  outputs: ${capability.outputs.map((o) => `${o.name}:${o.type}`).join(", ") || "(none)"}`,
+          `  steps:   ${capability.steps.length}`,
+          "",
+          "Compiler notes (review these):",
+          ...notes.map((n) => `  - ${n}`),
+          "",
+        ].join("\n"),
+      );
+    }
 
     return result.status === "succeeded" ? 0 : 1;
   } finally {
