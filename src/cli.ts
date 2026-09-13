@@ -1,12 +1,14 @@
 /**
  * Entry point for the computer-use automation system.
  *
- *   discover  LLM-driven run against a live surface; emits a capability artifact.
- *   replay    Deterministic execution of a saved artifact. No model in the loop.
- *   revise    Apply a reviewed revision to an artifact, producing its next version.
+ *   discover      LLM-driven run against a live surface; emits a capability artifact.
+ *   replay        Deterministic execution of a saved artifact. No model in the loop.
+ *   revise        Apply a reviewed revision to an artifact, producing its next version.
+ *   capabilities  Browse the catalog and invoke a capability by id.
  *
- * Either can run with --escalate, which serves the operator console alongside
- * the run so a person can take over the same live session when it needs them.
+ * discover and replay can run with --escalate, which serves the operator console
+ * alongside the run so a person can take over the same live session when it
+ * needs them.
  */
 
 import "dotenv/config";
@@ -16,6 +18,8 @@ import type { Server } from "node:http";
 import { join } from "node:path";
 
 import { runDiscovery } from "./agent/loop.js";
+import { Catalog, CAPABILITY_DIR } from "./catalog/catalog.js";
+import { formatCapabilityDescription, formatCatalogList } from "./catalog/format.js";
 import { compile } from "./compiler/compile.js";
 import { parseReview, reviseCapability } from "./compiler/revise.js";
 import { HandoffDesk } from "./escalation/desk.js";
@@ -27,22 +31,23 @@ import { launchWebSurface, type PlaywrightWebSurface } from "./perception/web-pl
 import { autoApprove, denyByDefault } from "./policy/confirm.js";
 import { PolicyEngine } from "./policy/engine.js";
 import { defaultPolicyConfig } from "./policy/types.js";
-import { exitCodeFor, replay } from "./replay/engine.js";
+import { exitCodeFor, replay, validateInputs } from "./replay/engine.js";
 import { formatReplayResult } from "./replay/format.js";
-import { parseCapability } from "./schema/capability.js";
+import { parseCapability, type Capability } from "./schema/capability.js";
 import { LeasedSurface, SessionLease } from "./session/lease.js";
 
-type Command = "discover" | "replay" | "revise";
+type Command = "discover" | "replay" | "revise" | "capabilities";
 
 const COMMANDS: Record<Command, string> = {
   discover: "Run the agent against a goal and record a capability artifact",
   replay: "Replay a saved capability artifact with typed input parameters",
   revise: "Apply a reviewed revision to a capability, writing its next version as a draft",
+  capabilities: "Browse the capability catalog, or invoke a capability by id",
 };
 
 function usage(): string {
   const rows = Object.entries(COMMANDS)
-    .map(([name, description]) => `  ${name.padEnd(10)}${description}`)
+    .map(([name, description]) => `  ${name.padEnd(14)}${description}`)
     .join("\n");
   return `Usage: npm run cua -- <command> [options]
 
@@ -73,6 +78,18 @@ replay options:
   --approve-risky           Approve irreversible steps (supervised use only).
                             Ignored with --escalate, where a person decides.
 
+capabilities subcommands:
+  list                      Everything in ${CAPABILITY_DIR}/, with its contract and version history.
+                            Exits non-zero if any file there is not a usable artifact.
+  describe <id>             One capability in full: steps, outcomes, provenance, invocation schema
+  tools                     The JSON tool definitions an agent is given for the catalog
+  invoke <id>               Replay a capability by id. Takes the same --input, --input-env,
+                            --entrypoint, --headed and handoff options as replay.
+
+capabilities options:
+  --version <n>             Pin a version. Default: the highest version of that capability
+  --dir <path>              Catalog directory (default ${CAPABILITY_DIR})
+
 revise options:
   --capability <file>       The artifact to revise
   --review <file>           A reviewed revision naming the id and version it applies to.
@@ -86,7 +103,8 @@ handoff options (discover and replay):
   --operator-port <n>       Console port on 127.0.0.1 (default 4174)
   --intervention-timeout <ms>  Abort an intervention nobody resolves in time (default: wait)
 
-  replay exit codes: 0 succeeded, 2 business outcome (a legitimate answer), 1 failed.
+  replay and capabilities invoke exit codes:
+    0 succeeded, 2 business outcome (a legitimate answer), 1 failed.
 `;
 }
 
@@ -267,22 +285,24 @@ async function discover(args: Args): Promise<number> {
   }
 }
 
-async function replayCommand(args: Args): Promise<number> {
-  const file = args.values.get("capability");
-  if (file === undefined) {
-    process.stderr.write("replay requires --capability <file>\n\n" + usage());
-    return 1;
-  }
-
-  const capability = parseCapability(JSON.parse(readFileSync(file, "utf8")));
+/**
+ * Reads invocation arguments from the command line.
+ *
+ * Returns the problems rather than the values when anything is wrong, so a
+ * caller can refuse before a browser is launched: a malformed invocation has no
+ * side effects to report on, and there is nothing to be learned from watching
+ * it fail against a live application.
+ */
+function collectInputs(capability: Capability, args: Args): { inputs: Record<string, string> } | { problems: string[] } {
   const secretNames = new Set(capability.inputs.filter((i) => i.sensitivity === "secret").map((i) => i.name));
   const inputs: Record<string, string> = {};
+  const problems: string[] = [];
 
   for (const pair of args.multi.get("input") ?? []) {
     const eq = pair.indexOf("=");
     if (eq <= 0) {
-      process.stderr.write(`--input expects name=value, got '${pair}'\n`);
-      return 1;
+      problems.push(`--input expects name=value, got '${pair}'`);
+      continue;
     }
     const name = pair.slice(0, eq);
     if (secretNames.has(name)) {
@@ -297,17 +317,40 @@ async function replayCommand(args: Args): Promise<number> {
   for (const pair of args.multi.get("input-env") ?? []) {
     const eq = pair.indexOf("=");
     if (eq <= 0) {
-      process.stderr.write(`--input-env expects name=VARIABLE, got '${pair}'\n`);
-      return 1;
+      problems.push(`--input-env expects name=VARIABLE, got '${pair}'`);
+      continue;
     }
     const variable = pair.slice(eq + 1);
     const value = process.env[variable];
     if (value === undefined) {
-      process.stderr.write(`environment variable ${variable} is not set\n`);
-      return 1;
+      problems.push(`environment variable ${variable} is not set`);
+      continue;
     }
     inputs[pair.slice(0, eq)] = value;
   }
+
+  // The same check replay applies internally, run early. A rejection here is
+  // exactly a rejection there, because it is the same function.
+  if (problems.length === 0) problems.push(...validateInputs(capability, inputs));
+  return problems.length > 0 ? { problems } : { inputs };
+}
+
+/** Replays a capability the caller has already resolved, by file or by catalog id. */
+async function runReplay(capability: Capability, args: Args): Promise<number> {
+  const collected = collectInputs(capability, args);
+  if ("problems" in collected) {
+    process.stderr.write(
+      [
+        `Cannot invoke ${capability.id} v${capability.version}:`,
+        ...collected.problems.map((problem) => `  - ${problem}`),
+        "",
+        `Expected inputs: ${capability.inputs.map((i) => `${i.name}:${i.type}${i.required ? "" : "?"}`).join(", ") || "(none)"}`,
+        "",
+      ].join("\n"),
+    );
+    return 1;
+  }
+  const inputs = collected.inputs;
 
   const entrypoint = args.values.get("entrypoint") ?? capability.surface.entrypoint;
   const policy = new PolicyEngine(defaultPolicyConfig(new URL(entrypoint).origin));
@@ -337,6 +380,80 @@ async function replayCommand(args: Args): Promise<number> {
     await handoff?.close();
     await inner.close();
   }
+}
+
+async function replayCommand(args: Args): Promise<number> {
+  const file = args.values.get("capability");
+  if (file === undefined) {
+    process.stderr.write("replay requires --capability <file>\n\n" + usage());
+    return 1;
+  }
+  return runReplay(parseCapability(JSON.parse(readFileSync(file, "utf8"))), args);
+}
+
+/**
+ * The catalog commands.
+ *
+ * `invoke` is the point of the catalog: a caller names a capability and its
+ * inputs, and never has to know where the artifact lives or which version is
+ * current. It runs the same replay engine as `replay --capability <file>` and
+ * returns the same exit codes, because binding by id changes what is selected,
+ * not how it executes.
+ */
+async function capabilitiesCommand(positional: readonly string[], args: Args): Promise<number> {
+  const [subcommand, id] = positional;
+  const dir = args.values.get("dir") ?? CAPABILITY_DIR;
+  const catalog = Catalog.load(dir);
+
+  if (subcommand === undefined || subcommand === "list") {
+    process.stdout.write(formatCatalogList(catalog, dir));
+    return catalog.problems.length > 0 ? 1 : 0;
+  }
+
+  if (subcommand === "tools") {
+    process.stdout.write(`${JSON.stringify(catalog.toolDefinitions(), null, 2)}\n`);
+    return 0;
+  }
+
+  if (subcommand !== "describe" && subcommand !== "invoke") {
+    process.stderr.write(`Unknown capabilities subcommand '${subcommand}'.\n\n${usage()}`);
+    return 1;
+  }
+
+  if (id === undefined) {
+    process.stderr.write(`capabilities ${subcommand} requires a capability id.\n\n${usage()}`);
+    return 1;
+  }
+
+  const rawVersion = args.values.get("version");
+  if (rawVersion !== undefined && !/^\d+$/.test(rawVersion)) {
+    process.stderr.write(`--version expects a positive integer, got '${rawVersion}'\n`);
+    return 1;
+  }
+
+  const resolution = catalog.resolve(id, rawVersion === undefined ? undefined : Number(rawVersion));
+  if (!resolution.ok) {
+    process.stderr.write(`${resolution.message}\n`);
+    return 1;
+  }
+
+  if (subcommand === "describe") {
+    process.stdout.write(formatCapabilityDescription(resolution.entry, resolution.selected));
+    return 0;
+  }
+
+  // Refusing to run a capability whose profile is missing is not pedantry: its
+  // outcome vocabulary lives there, so without it a legitimate business answer
+  // would come back as a failure.
+  const blockers = resolution.entry.blockers;
+  if (blockers.length > 0) {
+    process.stderr.write(`${id} cannot be replayed:\n${blockers.map((b) => `  - ${b}`).join("\n")}\n`);
+    return 1;
+  }
+
+  const { capability } = resolution.selected;
+  process.stdout.write(`Capability: ${capability.id} v${capability.version} (${resolution.selected.file})\n`);
+  return runReplay(capability, args);
 }
 
 async function reviseCommand(args: Args): Promise<number> {
@@ -388,6 +505,16 @@ async function main(argv: string[]): Promise<number> {
       return replayCommand(parseArgs(rest));
     case "revise":
       return reviseCommand(parseArgs(rest));
+    case "capabilities": {
+      // Leading bare words are the subcommand and the capability id; everything
+      // from the first --option onwards is parsed as options.
+      const positional: string[] = [];
+      for (const token of rest) {
+        if (token.startsWith("--")) break;
+        positional.push(token);
+      }
+      return capabilitiesCommand(positional, parseArgs(rest.slice(positional.length)));
+    }
   }
 }
 
