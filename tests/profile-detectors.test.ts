@@ -64,8 +64,36 @@ const SCREENS: Readonly<Record<string, string>> = {
   applicationError: serverErrorPage("MC-500-test"),
 };
 
+/**
+ * Screens that carry a message from the application, each of which some
+ * detector must claim.
+ *
+ * The complement of the over-matching rule, and the more expensive mistake. An
+ * unclaimed message screen is not a gap in a listing: the run simply carries on
+ * looking for the next screen's controls, fails as target_not_found, and with
+ * escalation enabled pages a person. That is what happened to a failed sign-on
+ * — this file already rendered `loginBadCredentials`, and nothing recognised it.
+ *
+ * The ordinary screens (login, search, detail, form, confirmation) are absent
+ * from this list on purpose: they say nothing, so nothing should match them.
+ */
+const MESSAGE_SCREENS: readonly string[] = [
+  "loginMissingOperator",
+  "loginBadCredentials",
+  "searchMissingMember",
+  "searchNonNumeric",
+  "notFound",
+  "denied",
+  "formLowDeposit",
+  "formMissingType",
+  "interstitial",
+  "sessionExpired",
+  "applicationError",
+];
+
 /** The screens each detector exists to recognise. Every other screen must not match. */
 const RECOGNISES: Readonly<Record<string, readonly string[]>> = {
+  SIGN_ON_FAILED: ["loginBadCredentials"],
   MEMBER_NOT_FOUND: ["notFound"],
   PERMISSION_DENIED: ["denied"],
   MEMBER_ID_INVALID: ["searchNonNumeric"],
@@ -85,6 +113,14 @@ const DETECTORS = [
 describe("every profile detector matches exactly its own screens", () => {
   it("declares the intended screens for every detector", () => {
     for (const { id } of DETECTORS) expect(RECOGNISES, `no screen contract for ${id}`).toHaveProperty(id);
+  });
+
+  it("leaves no message screen unrecognised", () => {
+    const claimed = new Set(Object.values(RECOGNISES).flat());
+    for (const name of MESSAGE_SCREENS) {
+      expect(SCREENS, `unknown screen '${name}'`).toHaveProperty(name);
+      expect(claimed.has(name), `screen '${name}' is recognised by no detector, so it would be reported as a failure`).toBe(true);
+    }
   });
 
   for (const { id, detector } of DETECTORS) {

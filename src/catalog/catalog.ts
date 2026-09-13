@@ -39,6 +39,8 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { z } from "zod";
+
 import type { ToolDefinition } from "../agent/tools.js";
 import { appProfile } from "../schema/app-profile.js";
 import { invocationSchema, parseCapability, type Capability } from "../schema/capability.js";
@@ -328,5 +330,8 @@ function blockersFor(capability: Capability): string[] {
 }
 
 function reason(error: unknown): string {
+  // A schema failure is the common case here, and its raw JSON dump is close to
+  // unreadable in a listing. Prettified, it names the field that is wrong.
+  if (error instanceof z.ZodError) return z.prettifyError(error).replace(/\s*\n\s*/g, "; ");
   return error instanceof Error ? error.message : String(error);
 }

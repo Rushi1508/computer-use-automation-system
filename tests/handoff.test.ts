@@ -23,7 +23,7 @@ import { parseCapability } from "../src/schema/capability.js";
 import { LeasedSurface, LeaseViolation, SessionLease } from "../src/session/lease.js";
 
 const SCRATCH = join(".runs", "__test_handoff__");
-const OPEN_ACCOUNT = parseCapability(JSON.parse(readFileSync(join("capabilities", "open_sub_account.v1.json"), "utf8")));
+const OPEN_ACCOUNT = parseCapability(JSON.parse(readFileSync(join("capabilities", "open_sub_account.v2.json"), "utf8")));
 const INPUTS = { operatorId: "op-test", password: "demo", memberId: "12345", accountType: "Savings", initialDeposit: "500.00" };
 
 type Listening = { server: Server; base: string };

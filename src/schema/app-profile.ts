@@ -106,6 +106,17 @@ export const MERIDIAN_PROFILE: AppProfile = AppProfileSchema.parse({
 
   knownOutcomes: [
     {
+      code: "SIGN_ON_FAILED",
+      description:
+        "The application rejected the supplied operator credentials. A legitimate answer, not a " +
+        "fault: retrying cannot help, and neither can a person taking over the session, because " +
+        "the credential the caller holds is the one that is wrong. Without this outcome the run " +
+        "goes on to look for the next screen's controls, fails as target_not_found, and — with " +
+        "escalation enabled — pages an operator over a wrong password.",
+      detector: { kind: "text_present", text: "Sign-on failed" },
+      terminal: true,
+    },
+    {
       code: "MEMBER_NOT_FOUND",
       description: "No member exists with the supplied ID. A legitimate answer, not a failure.",
       detector: { kind: "text_present", text: "No member found for ID" },

@@ -10,10 +10,10 @@
     "evidence": {}
   },
   "capabilityId": "lookup_member_savings_balance",
-  "capabilityVersion": 2,
+  "capabilityVersion": 3,
   "runId": "09-failed-invalid-invocation",
-  "entrypoint": "http://127.0.0.1:55626/",
-  "startedAt": "2026-09-12T21:07:18.746Z",
+  "entrypoint": "http://127.0.0.1:60982/",
+  "startedAt": "2026-09-13T01:08:43.265Z",
   "elapsedMs": 1,
   "steps": [],
   "recoveries": [],

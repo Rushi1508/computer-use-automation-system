@@ -11,7 +11,7 @@
     "detail": "'Open Account' looks irreversible. A person should decide before it runs."
   },
   "expected": "approval to click the button \"Open Account\"",
-  "observed": "title \"MERIDIAN CORE\" at http://127.0.0.1:51306/ showing: (top) (no document body; content is in child frames) navmenu text: Navigation link \"Member Search\": /url: /content link \"Account Servicing\": /url: /content link \"Sign Off\": /url: /logout main table: rowgroup: row \"MERIDIAN CORE — Member Servicing\": cell \"MERIDIAN CORE — Member Servicing\" row \"Open Sub-Account - 12345\": cell \"Open Sub-Account - 12345\" paragraph: Opening a new sub-account for Dolore…",
+  "observed": "title \"MERIDIAN CORE\" at http://127.0.0.1:65342/ showing: (top) (no document body; content is in child frames) navmenu text: Navigation link \"Member Search\": /url: /content link \"Account Servicing\": /url: /content link \"Sign Off\": /url: /logout main table: rowgroup: row \"MERIDIAN CORE — Member Servicing\": cell \"MERIDIAN CORE — Member Servicing\" row \"Open Sub-Account - 12345\": cell \"Open Sub-Account - 12345\" paragraph: Opening a new sub-account for Dolore…",
   "allowed": [
     "approve",
     "reject",
@@ -19,10 +19,10 @@
   ],
   "id": "int-001",
   "status": "resolved",
-  "createdAt": "2026-09-12T21:08:00.625Z",
-  "claimedAt": "2026-09-12T21:08:01.033Z",
+  "createdAt": "2026-09-13T01:09:08.735Z",
+  "claimedAt": "2026-09-13T01:09:08.908Z",
   "claimedBy": "operator-sam",
-  "resolvedAt": "2026-09-12T21:08:01.509Z",
+  "resolvedAt": "2026-09-13T01:09:09.129Z",
   "resolution": {
     "kind": "reject"
   },
@@ -34,8 +34,8 @@
   "actions": [],
   "navigations": [],
   "stateBefore": {
-    "at": "2026-09-12T21:08:00.808Z",
-    "url": "http://127.0.0.1:51306/",
+    "at": "2026-09-13T01:09:08.786Z",
+    "url": "http://127.0.0.1:65342/",
     "title": "MERIDIAN CORE",
     "fields": [
       {
@@ -53,8 +53,8 @@
     ]
   },
   "stateAfter": {
-    "at": "2026-09-12T21:08:01.426Z",
-    "url": "http://127.0.0.1:51306/",
+    "at": "2026-09-13T01:09:09.101Z",
+    "url": "http://127.0.0.1:65342/",
     "title": "MERIDIAN CORE",
     "fields": [
       {
@@ -73,7 +73,7 @@
   },
   "lease": [
     {
-      "at": "2026-09-12T21:08:00.898Z",
+      "at": "2026-09-13T01:09:08.831Z",
       "from": "automation",
       "to": "pending_human",
       "holder": null,
@@ -81,7 +81,7 @@
       "reason": "risky-irreversible: 'Open Account' looks irreversible. A person should decide before it runs."
     },
     {
-      "at": "2026-09-12T21:08:01.031Z",
+      "at": "2026-09-13T01:09:08.907Z",
       "from": "pending_human",
       "to": "human",
       "holder": {
@@ -92,7 +92,7 @@
       "reason": "operator-sam claimed int-001"
     },
     {
-      "at": "2026-09-12T21:08:01.508Z",
+      "at": "2026-09-13T01:09:09.129Z",
       "from": "human",
       "to": "resuming",
       "holder": null,
@@ -100,7 +100,7 @@
       "reason": "operator-sam resolved int-001: reject"
     },
     {
-      "at": "2026-09-12T21:08:01.513Z",
+      "at": "2026-09-13T01:09:09.131Z",
       "from": "resuming",
       "to": "automation",
       "holder": {

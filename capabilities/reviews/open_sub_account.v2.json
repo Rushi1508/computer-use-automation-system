@@ -1,0 +1,15 @@
+{
+  "capabilityId": "open_sub_account",
+  "baseVersion": 1,
+  "reviewer": "reviewer-1",
+  "revisedAt": "2026-09-13T01:30:00.000Z",
+  "summary": "The same gap found in the balance lookup applies here, and matters more: this flow has an irreversible step. A rejected credential left the run hunting for controls that only a signed-on session shows, until it failed as target_not_found marked escalatable — so a wrong password would have summoned a person to a session that could never proceed, at the same desk that exists to approve account openings. SIGN_ON_FAILED now ends the run at the sign-on screen with an answer the caller can act on, and the irreversible step is never reached.",
+  "addOutcomes": [
+    {
+      "code": "SIGN_ON_FAILED",
+      "description": "The application rejected the supplied operator credentials. Retrying cannot help, and neither can a person taking over the session, because the credential the caller holds is the one that is wrong.",
+      "detector": { "kind": "text_present", "text": "Sign-on failed" },
+      "terminal": true
+    }
+  ]
+}

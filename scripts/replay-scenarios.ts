@@ -31,7 +31,7 @@ import { formatReplayResult } from "../src/replay/format.js";
 import { parseCapability } from "../src/schema/capability.js";
 
 const ROOT = join("evidence", "replay");
-const CAPABILITY_FILE = process.argv[2] ?? join("capabilities", "lookup_member_savings_balance.v2.json");
+const CAPABILITY_FILE = process.argv[2] ?? join("capabilities", "lookup_member_savings_balance.v3.json");
 
 /**
  * The demo application's published sign-on password, shown on its own login
@@ -143,6 +143,17 @@ const SCENARIOS: readonly Scenario[] = [
     seedAccount: { memberId: "12345", type: "Savings", depositCents: "50000" },
     expectStatus: "failed",
     expectDetail: "target_ambiguous",
+  },
+  {
+    // Found by an edge-case sweep, not by the original recording: the run used
+    // to walk past the sign-on screen looking for controls only a signed-on
+    // session shows, and fail as an escalatable target_not_found — paging a
+    // person over a wrong password, which no person at the desk can fix.
+    id: "13-outcome-sign-on-failed",
+    condition: "Credential the application rejects",
+    inputs: { ...HEALTHY, password: "not-the-password" },
+    expectStatus: "business_outcome",
+    expectDetail: "SIGN_ON_FAILED",
   },
 ];
 

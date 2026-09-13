@@ -5,7 +5,7 @@
     "stepIndex": 8,
     "stepIntent": "Open the account",
     "expected": "a person to approve: 'Open Account' looks irreversible. A person should decide before it runs.",
-    "observed": "refused by operator operator-sam: Certificate opening above the unattended limit; needs branch manager sign-off. | title \"MERIDIAN CORE\" at http://127.0.0.1:51306/ showing: (top) (no document body; content is in child frames) navmenu text: Navigation link \"Member Search\": /url: /content link \"Account Servicing\": /url: /content link \"Sign Off\": /url: /logout main table: rowgroup: row \"MERIDIAN CORE — Member Servicing\": cell \"MERIDIAN CORE — Member Servicing\" row \"Open Sub-Account - 12345\": cell \"Open Sub-Account - 12345\" paragraph: Opening a new sub-account for Dolore…",
+    "observed": "refused by operator operator-sam: Certificate opening above the unattended limit; needs branch manager sign-off. | title \"MERIDIAN CORE\" at http://127.0.0.1:65342/ showing: (top) (no document body; content is in child frames) navmenu text: Navigation link \"Member Search\": /url: /content link \"Account Servicing\": /url: /content link \"Sign Off\": /url: /logout main table: rowgroup: row \"MERIDIAN CORE — Member Servicing\": cell \"MERIDIAN CORE — Member Servicing\" row \"Open Sub-Account - 12345\": cell \"Open Sub-Account - 12345\" paragraph: Opening a new sub-account for Dolore…",
     "escalatable": false,
     "evidence": {
       "screenshot": "evidence\\handoff\\03-operator-rejects-irreversible-step\\screenshots\\failure-step-8.png",
@@ -13,17 +13,17 @@
     }
   },
   "capabilityId": "open_sub_account",
-  "capabilityVersion": 1,
+  "capabilityVersion": 2,
   "runId": "03-operator-rejects-irreversible-step",
-  "entrypoint": "http://127.0.0.1:51306/",
-  "startedAt": "2026-09-12T21:07:56.157Z",
-  "elapsedMs": 5627,
+  "entrypoint": "http://127.0.0.1:65342/",
+  "startedAt": "2026-09-13T01:09:06.476Z",
+  "elapsedMs": 2756,
   "steps": [
     {
       "index": 0,
       "action": "fill",
       "intent": "Enter the operator ID to sign on",
-      "durationMs": 299,
+      "durationMs": 123,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -37,7 +37,7 @@
       "index": 1,
       "action": "fill",
       "intent": "Enter the password to sign on",
-      "durationMs": 172,
+      "durationMs": 65,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -51,7 +51,7 @@
       "index": 2,
       "action": "click",
       "intent": "Submit the sign-on form",
-      "durationMs": 808,
+      "durationMs": 488,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -65,7 +65,7 @@
       "index": 3,
       "action": "fill",
       "intent": "Enter the member ID to look up",
-      "durationMs": 368,
+      "durationMs": 99,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -79,7 +79,7 @@
       "index": 4,
       "action": "click",
       "intent": "Search for the member",
-      "durationMs": 695,
+      "durationMs": 451,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -93,7 +93,7 @@
       "index": 5,
       "action": "click",
       "intent": "Open the sub-account form for this member",
-      "durationMs": 896,
+      "durationMs": 459,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -107,7 +107,7 @@
       "index": 6,
       "action": "select",
       "intent": "Choose the account type",
-      "durationMs": 387,
+      "durationMs": 110,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -121,7 +121,7 @@
       "index": 7,
       "action": "fill",
       "intent": "Enter the initial deposit",
-      "durationMs": 369,
+      "durationMs": 115,
       "polls": 0,
       "resolvedBy": {
         "kind": "anchored_row",
@@ -144,7 +144,7 @@
       "resolution": "reject",
       "note": "Certificate opening above the unattended limit; needs branch manager sign-off.",
       "operatorActions": 0,
-      "pausedMs": 891
+      "pausedMs": 397
     }
   ]
 }

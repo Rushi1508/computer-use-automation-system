@@ -56,10 +56,10 @@
       - cell "Certificate"
       - cell "$25,000.00"
       - cell "2022-11-02"
-    - row "0009-4000 Savings $500.00 2026-09-12":
+    - row "0009-4000 Savings $500.00 2026-09-13":
       - cell "0009-4000"
       - cell "Savings"
       - cell "$500.00"
-      - cell "2026-09-12"
+      - cell "2026-09-13"
 - button "Open Sub-Account"
 - button "Back to Search"

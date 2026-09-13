@@ -1,0 +1,428 @@
+{
+  "schemaVersion": 1,
+  "id": "lookup_member_savings_balance",
+  "version": 3,
+  "name": "lookup member savings balance",
+  "description": "Sign on with operator ID '{operatorId}' and password '[REDACTED]', then look up member {memberId} and read their current savings balance.",
+  "approvalState": "draft",
+  "surface": {
+    "kind": "legacy_web",
+    "entrypoint": "http://127.0.0.1:4173/",
+    "appProfileId": "meridian_core"
+  },
+  "lineage": {
+    "overrides": []
+  },
+  "inputs": [
+    {
+      "name": "operatorId",
+      "type": "string",
+      "required": true,
+      "description": "Value for \"Operator ID\".",
+      "sensitivity": "pii"
+    },
+    {
+      "name": "password",
+      "type": "string",
+      "required": true,
+      "description": "Value for \"Password\".",
+      "sensitivity": "secret"
+    },
+    {
+      "name": "memberId",
+      "type": "string",
+      "required": true,
+      "description": "Value for \"Member ID\".",
+      "sensitivity": "pii"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "savingsBalance",
+      "type": "string",
+      "description": "Value read from the \"Balance\" value in the row containing \"Savings\".",
+      "sensitivity": "none",
+      "fromStep": 5
+    }
+  ],
+  "steps": [
+    {
+      "index": 0,
+      "intent": "Enter operator ID to sign on",
+      "action": "fill",
+      "target": {
+        "description": "the textbox \"Operator ID\"",
+        "framePath": [],
+        "actionable": true,
+        "strategies": [
+          {
+            "strategy": {
+              "kind": "role_name",
+              "role": "textbox",
+              "name": "Operator ID"
+            },
+            "confidence": 0.95,
+            "rationale": "The textbox named \"Operator ID\" — how an operator identifies it, so it survives restyling and relayout and breaks only if the label itself changes."
+          },
+          {
+            "strategy": {
+              "kind": "anchored_row",
+              "role": "textbox",
+              "anchorText": "Operator ID"
+            },
+            "confidence": 0.85,
+            "rationale": "The textbox whose label cell reads \"Operator ID\". Independent of the accessible name, so it still resolves if the label is reworded."
+          },
+          {
+            "strategy": {
+              "kind": "field_name",
+              "fieldName": "operator"
+            },
+            "confidence": 0.7,
+            "rationale": "Form field name \"operator\". In a server-rendered application this is part of the HTTP contract, so changing it means changing the request handler. Ranked below semantic strategies because it is invisible to users, so a rewrite can rename it without anyone noticing."
+          },
+          {
+            "strategy": {
+              "kind": "dom_id",
+              "domId": "ctl00_txtOperator"
+            },
+            "confidence": 0.35,
+            "rationale": "Generated control id \"ctl00_txtOperator\". Ids of this shape encode the server control tree, so they change whenever the page is restructured and are usually the first locator to break after a vendor upgrade. Kept for debugging and tie-breaking, not for driving."
+          }
+        ]
+      },
+      "value": {
+        "param": "operatorId"
+      },
+      "risk": "safe_reversible",
+      "waitMs": 0
+    },
+    {
+      "index": 1,
+      "intent": "Enter password to sign on",
+      "action": "fill",
+      "target": {
+        "description": "the textbox \"Password\"",
+        "framePath": [],
+        "actionable": true,
+        "strategies": [
+          {
+            "strategy": {
+              "kind": "role_name",
+              "role": "textbox",
+              "name": "Password"
+            },
+            "confidence": 0.95,
+            "rationale": "The textbox named \"Password\" — how an operator identifies it, so it survives restyling and relayout and breaks only if the label itself changes."
+          },
+          {
+            "strategy": {
+              "kind": "anchored_row",
+              "role": "textbox",
+              "anchorText": "Password"
+            },
+            "confidence": 0.85,
+            "rationale": "The textbox whose label cell reads \"Password\". Independent of the accessible name, so it still resolves if the label is reworded."
+          },
+          {
+            "strategy": {
+              "kind": "field_name",
+              "fieldName": "password"
+            },
+            "confidence": 0.7,
+            "rationale": "Form field name \"password\". In a server-rendered application this is part of the HTTP contract, so changing it means changing the request handler. Ranked below semantic strategies because it is invisible to users, so a rewrite can rename it without anyone noticing."
+          },
+          {
+            "strategy": {
+              "kind": "dom_id",
+              "domId": "ctl00_txtPass"
+            },
+            "confidence": 0.35,
+            "rationale": "Generated control id \"ctl00_txtPass\". Ids of this shape encode the server control tree, so they change whenever the page is restructured and are usually the first locator to break after a vendor upgrade. Kept for debugging and tie-breaking, not for driving."
+          }
+        ]
+      },
+      "value": {
+        "param": "password"
+      },
+      "risk": "safe_reversible",
+      "waitMs": 0
+    },
+    {
+      "index": 2,
+      "intent": "Submit credentials to sign on",
+      "action": "click",
+      "target": {
+        "description": "the button \"Sign On\"",
+        "framePath": [],
+        "actionable": true,
+        "strategies": [
+          {
+            "strategy": {
+              "kind": "role_name",
+              "role": "button",
+              "name": "Sign On"
+            },
+            "confidence": 0.95,
+            "rationale": "The button named \"Sign On\" — how an operator identifies it, so it survives restyling and relayout and breaks only if the label itself changes."
+          }
+        ]
+      },
+      "risk": "safe_reversible",
+      "waitMs": 0
+    },
+    {
+      "index": 3,
+      "intent": "Enter member ID to look up",
+      "action": "fill",
+      "target": {
+        "description": "the textbox \"Member ID\"",
+        "framePath": [
+          "main"
+        ],
+        "actionable": true,
+        "strategies": [
+          {
+            "strategy": {
+              "kind": "role_name",
+              "role": "textbox",
+              "name": "Member ID"
+            },
+            "confidence": 0.95,
+            "rationale": "The textbox named \"Member ID\" — how an operator identifies it, so it survives restyling and relayout and breaks only if the label itself changes."
+          },
+          {
+            "strategy": {
+              "kind": "anchored_row",
+              "role": "textbox",
+              "anchorText": "Member ID"
+            },
+            "confidence": 0.85,
+            "rationale": "The textbox whose label cell reads \"Member ID\". Independent of the accessible name, so it still resolves if the label is reworded."
+          },
+          {
+            "strategy": {
+              "kind": "field_name",
+              "fieldName": "memberId"
+            },
+            "confidence": 0.7,
+            "rationale": "Form field name \"memberId\". In a server-rendered application this is part of the HTTP contract, so changing it means changing the request handler. Ranked below semantic strategies because it is invisible to users, so a rewrite can rename it without anyone noticing."
+          },
+          {
+            "strategy": {
+              "kind": "dom_id",
+              "domId": "ctl00_MainContent_txtMemberId"
+            },
+            "confidence": 0.35,
+            "rationale": "Generated control id \"ctl00_MainContent_txtMemberId\". Ids of this shape encode the server control tree, so they change whenever the page is restructured and are usually the first locator to break after a vendor upgrade. Kept for debugging and tie-breaking, not for driving."
+          }
+        ]
+      },
+      "value": {
+        "param": "memberId"
+      },
+      "risk": "safe_reversible",
+      "waitMs": 0
+    },
+    {
+      "index": 4,
+      "intent": "Search for member {memberId}",
+      "action": "click",
+      "target": {
+        "description": "the button \"Search\"",
+        "framePath": [
+          "main"
+        ],
+        "actionable": true,
+        "strategies": [
+          {
+            "strategy": {
+              "kind": "role_name",
+              "role": "button",
+              "name": "Search"
+            },
+            "confidence": 0.95,
+            "rationale": "The button named \"Search\" — how an operator identifies it, so it survives restyling and relayout and breaks only if the label itself changes."
+          },
+          {
+            "strategy": {
+              "kind": "anchored_row",
+              "role": "button",
+              "anchorText": "Member ID"
+            },
+            "confidence": 0.85,
+            "rationale": "The button whose label cell reads \"Member ID\". Independent of the accessible name, so it still resolves if the label is reworded."
+          }
+        ]
+      },
+      "risk": "safe_reversible",
+      "waitMs": 0
+    },
+    {
+      "index": 5,
+      "intent": "Capture the savings account balance requested by the goal",
+      "action": "read",
+      "target": {
+        "description": "the \"Balance\" value in the row containing \"Savings\"",
+        "framePath": [
+          "main"
+        ],
+        "actionable": false,
+        "strategies": [
+          {
+            "strategy": {
+              "kind": "grid_cell",
+              "column": "Balance",
+              "rowContains": "Savings"
+            },
+            "confidence": 0.92,
+            "rationale": "The cell under the \"Balance\" column in the row containing \"Savings\". A value in a data grid needs both coordinates: cells in one row share the same neighbours, so a row label alone matches several of them. Matching the column by header text rather than position also survives columns being reordered."
+          },
+          {
+            "strategy": {
+              "kind": "anchored_row",
+              "role": "text",
+              "anchorText": "Savings"
+            },
+            "confidence": 0.43,
+            "rationale": "The text next to \"Savings\". Ranked below the grid coordinate, which also pins the column. 2 elements on the recorded screen match this, so on its own it cannot tell them apart."
+          }
+        ]
+      },
+      "outputName": "savingsBalance",
+      "risk": "safe_reversible",
+      "waitMs": 0,
+      "checkpoint": {
+        "description": "The screen shows \"Account\".",
+        "detector": {
+          "kind": "text_present",
+          "text": "Account"
+        }
+      }
+    }
+  ],
+  "authentication": {
+    "throughStep": 2
+  },
+  "successCheckpoint": {
+    "description": "The screen shows a grid with a \"Balance\" column, where the returned value is read from.",
+    "detector": {
+      "kind": "text_present",
+      "text": "Balance"
+    }
+  },
+  "knownOutcomes": [
+    {
+      "code": "MEMBER_NOT_FOUND",
+      "description": "No member exists with the supplied ID. A legitimate answer, not a failure.",
+      "detector": {
+        "kind": "text_present",
+        "text": "No member found for ID"
+      },
+      "terminal": true
+    },
+    {
+      "code": "PERMISSION_DENIED",
+      "description": "The member record exists but this operator's role cannot view it. The caller needs to distinguish this from not-found, because the remedy is an access request rather than a corrected ID.",
+      "detector": {
+        "kind": "text_present",
+        "text": "Not authorized to view member"
+      },
+      "terminal": true
+    },
+    {
+      "code": "MEMBER_ID_INVALID",
+      "description": "The application rejected the member ID's format. The caller supplied a malformed value.",
+      "detector": {
+        "kind": "text_present",
+        "text": "Member ID must be numeric"
+      },
+      "terminal": true
+    },
+    {
+      "code": "VALIDATION_REJECTED",
+      "description": "The application rejected the submitted values. The caller should correct inputs and retry.",
+      "detector": {
+        "kind": "text_present",
+        "text": "must be at least"
+      },
+      "terminal": true
+    },
+    {
+      "code": "REQUIRED_FIELD_MISSING",
+      "description": "The application reported that a required field was not supplied.",
+      "detector": {
+        "kind": "text_matches",
+        "pattern": "\\b(Operator ID|Password|Member ID|Account Type|Initial Deposit) is required\\b"
+      },
+      "terminal": true
+    },
+    {
+      "code": "NO_OPEN_ACCOUNTS",
+      "description": "The member has no open accounts at all, so there is no savings balance to return.",
+      "detector": {
+        "kind": "text_present",
+        "text": "No open accounts.",
+        "framePath": [
+          "main"
+        ]
+      },
+      "atSteps": [
+        5
+      ],
+      "terminal": true
+    },
+    {
+      "code": "NO_SAVINGS_ACCOUNT",
+      "description": "The member's accounts are showing, but none of them is a savings account, so there is no savings balance to return.",
+      "absentTarget": {
+        "step": 5,
+        "screenReady": {
+          "kind": "grid_column",
+          "column": "Balance",
+          "framePath": [
+            "main"
+          ]
+        }
+      },
+      "terminal": true
+    },
+    {
+      "code": "SIGN_ON_FAILED",
+      "description": "The application rejected the supplied operator credentials. Retrying cannot help, and neither can a person taking over the session, because the credential the caller holds is the one that is wrong.",
+      "detector": {
+        "kind": "text_present",
+        "text": "Sign-on failed"
+      },
+      "terminal": true
+    }
+  ],
+  "provenance": {
+    "discoveryRunId": "discovery-2026-09-12T19-48-38",
+    "goal": "Sign on with operator ID '{operatorId}' and password '[REDACTED]', then look up member {memberId} and read their current savings balance.",
+    "model": "claude-opus-5",
+    "recordedAt": "2026-09-12T19:48:53.549Z",
+    "tracedSteps": 6,
+    "revisions": [
+      {
+        "version": 2,
+        "revisedAt": "2026-09-12T21:00:00.000Z",
+        "reviewer": "reviewer-1",
+        "summary": "Replay review found two legitimate answers reported as failures. A member whose only account is checking, and a closed member with no accounts, both ran out the full step timeout and failed with target_not_found, which with escalation enabled would page a person. Neither is a fault: there is simply no savings balance to return, and the caller needs to know which case applies.",
+        "changes": [
+          "added outcome NO_OPEN_ACCOUNTS: text_present at step 5",
+          "added outcome NO_SAVINGS_ACCOUNT: the target of step 5 is absent"
+        ]
+      },
+      {
+        "version": 3,
+        "revisedAt": "2026-09-13T01:30:00.000Z",
+        "reviewer": "reviewer-1",
+        "summary": "An edge-case sweep invoked the capability with a credential the application rejects. The run did not stop at the sign-on screen: it went on looking for the Member ID textbox that a signed-on session would have shown, ran out the step timeout, and failed with target_not_found marked escalatable — which pages an operator over a wrong password, something no operator can fix. A rejected credential is a legitimate answer the caller needs back. This is the application's own vocabulary rather than anything specific to this flow, so SIGN_ON_FAILED has been added to the meridian_core profile and every capability compiled from now on carries it; this review back-fills it into an artifact that was compiled before it existed, because versions are immutable.",
+        "changes": [
+          "added outcome SIGN_ON_FAILED: text_present"
+        ]
+      }
+    ]
+  }
+}

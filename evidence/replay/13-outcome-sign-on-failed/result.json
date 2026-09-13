@@ -1,23 +1,23 @@
 {
   "status": "business_outcome",
   "outcome": {
-    "code": "MEMBER_NOT_FOUND",
-    "description": "No member exists with the supplied ID. A legitimate answer, not a failure.",
-    "basis": "text \"No member found for ID\" is on screen"
+    "code": "SIGN_ON_FAILED",
+    "description": "The application rejected the supplied operator credentials. Retrying cannot help, and neither can a person taking over the session, because the credential the caller holds is the one that is wrong.",
+    "basis": "text \"Sign-on failed\" is on screen"
   },
-  "atStep": 5,
+  "atStep": 3,
   "capabilityId": "lookup_member_savings_balance",
   "capabilityVersion": 3,
-  "runId": "02-outcome-member-not-found",
+  "runId": "13-outcome-sign-on-failed",
   "entrypoint": "http://127.0.0.1:60982/",
-  "startedAt": "2026-09-13T01:08:25.368Z",
-  "elapsedMs": 1527,
+  "startedAt": "2026-09-13T01:08:49.655Z",
+  "elapsedMs": 882,
   "steps": [
     {
       "index": 0,
       "action": "fill",
       "intent": "Enter operator ID to sign on",
-      "durationMs": 126,
+      "durationMs": 116,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -31,7 +31,7 @@
       "index": 1,
       "action": "fill",
       "intent": "Enter password to sign on",
-      "durationMs": 74,
+      "durationMs": 62,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -45,35 +45,7 @@
       "index": 2,
       "action": "click",
       "intent": "Submit credentials to sign on",
-      "durationMs": 481,
-      "polls": 0,
-      "resolvedBy": {
-        "kind": "role_name",
-        "rank": 0,
-        "confidence": 0.95
-      },
-      "reauthentication": "[REDACTED]",
-      "completedBy": "automation"
-    },
-    {
-      "index": 3,
-      "action": "fill",
-      "intent": "Enter member ID to look up",
-      "durationMs": 99,
-      "polls": 0,
-      "resolvedBy": {
-        "kind": "role_name",
-        "rank": 0,
-        "confidence": 0.95
-      },
-      "reauthentication": "[REDACTED]",
-      "completedBy": "automation"
-    },
-    {
-      "index": 4,
-      "action": "click",
-      "intent": "Search for member {memberId}",
-      "durationMs": 419,
+      "durationMs": 392,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",

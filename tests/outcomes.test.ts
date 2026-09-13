@@ -3,7 +3,7 @@
  * from ever being mistaken for an answer when it is not one.
  */
 
-import { readFileSync, rmSync } from "node:fs";
+import { readdirSync, readFileSync, rmSync } from "node:fs";
 import type { Server } from "node:http";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -317,6 +317,32 @@ describe("reviewed revisions", () => {
     const text = readFileSync(V2_FILE, "utf8");
     for (const literal of ["12345", "23456", "67890", "Dolores", "Teddy", "14,820"]) expect(text).not.toContain(literal);
   });
+});
+
+/**
+ * Every committed review, not just the first one.
+ *
+ * Applying a review is deterministic, so each revised artifact in the
+ * repository must be exactly what its base and its review produce. This is what
+ * makes a revision auditable: a reviewer can re-derive the artifact rather than
+ * taking the committed file's word for what was changed.
+ */
+describe("every committed revision regenerates from its base and review", () => {
+  const reviewDir = join("capabilities", "reviews");
+  const reviewFiles = readdirSync(reviewDir).filter((name) => name.endsWith(".json"));
+
+  it("finds the reviews", () => expect(reviewFiles.length).toBeGreaterThan(0));
+
+  for (const name of reviewFiles) {
+    it(name, () => {
+      const review = parseReview(readJson(join(reviewDir, name)));
+      const base = parseCapability(readJson(join("capabilities", `${review.capabilityId}.v${review.baseVersion}.json`)));
+      const committed = parseCapability(
+        readJson(join("capabilities", `${review.capabilityId}.v${review.baseVersion + 1}.json`)),
+      );
+      expect(reviseCapability(base, review)).toEqual(committed);
+    });
+  }
 });
 
 // --- Against the real application -------------------------------------------------------

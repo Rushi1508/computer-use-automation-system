@@ -118,15 +118,26 @@ interface Args {
   readonly values: ReadonlyMap<string, string>;
   /** Every value given for each option, for repeatable options. */
   readonly multi: ReadonlyMap<string, readonly string[]>;
+  /**
+   * Bare words that were not consumed as an option's value: a subcommand and
+   * the capability id it names. Collected wherever they appear, so
+   * `describe --version 2 <id>` means what it looks like it means.
+   */
+  readonly positionals: readonly string[];
 }
 
 function parseArgs(argv: readonly string[]): Args {
   const flags = new Set<string>();
   const values = new Map<string, string>();
   const multi = new Map<string, string[]>();
+  const positionals: string[] = [];
   for (let i = 0; i < argv.length; i++) {
     const token = argv[i];
-    if (token === undefined || !token.startsWith("--")) continue;
+    if (token === undefined) continue;
+    if (!token.startsWith("--")) {
+      positionals.push(token);
+      continue;
+    }
     const key = token.slice(2);
     const next = argv[i + 1];
     if (next !== undefined && !next.startsWith("--")) {
@@ -137,7 +148,22 @@ function parseArgs(argv: readonly string[]): Args {
       flags.add(key);
     }
   }
-  return { flags, values, multi };
+  return { flags, values, multi, positionals };
+}
+
+/**
+ * Reads a URL option, reporting a malformed one as an error a person can act
+ * on. Without this the URL constructor's own TypeError reaches the top level
+ * and is printed as a stack trace, which reads like a crash in the tool rather
+ * than a typo in the command.
+ */
+function readUrl(raw: string, option: string): URL | null {
+  try {
+    return new URL(raw);
+  } catch {
+    process.stderr.write(`${option} must be an absolute URL like http://host:port/, got '${raw}'\n`);
+    return null;
+  }
 }
 
 interface Handoff {
@@ -197,7 +223,10 @@ async function discover(args: Args): Promise<number> {
     return 1;
   }
 
-  const policy = new PolicyEngine(defaultPolicyConfig(new URL(url).origin));
+  const entry = readUrl(url, "--url");
+  if (entry === null) return 1;
+
+  const policy = new PolicyEngine(defaultPolicyConfig(entry.origin));
   const evidence = new EvidenceBus(newRunId("discovery"));
   const inner = await launchWebSurface({ headed: args.flags.has("headed") });
 
@@ -353,7 +382,10 @@ async function runReplay(capability: Capability, args: Args): Promise<number> {
   const inputs = collected.inputs;
 
   const entrypoint = args.values.get("entrypoint") ?? capability.surface.entrypoint;
-  const policy = new PolicyEngine(defaultPolicyConfig(new URL(entrypoint).origin));
+  const target = readUrl(entrypoint, "--entrypoint");
+  if (target === null) return 1;
+
+  const policy = new PolicyEngine(defaultPolicyConfig(target.origin));
   const evidence = new EvidenceBus(newRunId(`replay-${capability.id}`));
   // A fresh browser per invocation: a capability is recorded from a signed-out
   // start, so replay owns the session it runs in.
@@ -400,8 +432,8 @@ async function replayCommand(args: Args): Promise<number> {
  * returns the same exit codes, because binding by id changes what is selected,
  * not how it executes.
  */
-async function capabilitiesCommand(positional: readonly string[], args: Args): Promise<number> {
-  const [subcommand, id] = positional;
+async function capabilitiesCommand(args: Args): Promise<number> {
+  const [subcommand, id] = args.positionals;
   const dir = args.values.get("dir") ?? CAPABILITY_DIR;
   const catalog = Catalog.load(dir);
 
@@ -426,12 +458,18 @@ async function capabilitiesCommand(positional: readonly string[], args: Args): P
   }
 
   const rawVersion = args.values.get("version");
-  if (rawVersion !== undefined && !/^\d+$/.test(rawVersion)) {
-    process.stderr.write(`--version expects a positive integer, got '${rawVersion}'\n`);
-    return 1;
+  let version: number | undefined;
+  if (rawVersion !== undefined) {
+    // Checked beyond the digits: a long enough run of them parses to a float,
+    // and reporting 'no version 1e+21' explains nothing.
+    version = Number(rawVersion);
+    if (!/^\d+$/.test(rawVersion) || !Number.isSafeInteger(version) || version < 1) {
+      process.stderr.write(`--version expects a positive whole number, got '${rawVersion}'\n`);
+      return 1;
+    }
   }
 
-  const resolution = catalog.resolve(id, rawVersion === undefined ? undefined : Number(rawVersion));
+  const resolution = catalog.resolve(id, version);
   if (!resolution.ok) {
     process.stderr.write(`${resolution.message}\n`);
     return 1;
@@ -505,16 +543,8 @@ async function main(argv: string[]): Promise<number> {
       return replayCommand(parseArgs(rest));
     case "revise":
       return reviseCommand(parseArgs(rest));
-    case "capabilities": {
-      // Leading bare words are the subcommand and the capability id; everything
-      // from the first --option onwards is parsed as options.
-      const positional: string[] = [];
-      for (const token of rest) {
-        if (token.startsWith("--")) break;
-        positional.push(token);
-      }
-      return capabilitiesCommand(positional, parseArgs(rest.slice(positional.length)));
-    }
+    case "capabilities":
+      return capabilitiesCommand(parseArgs(rest));
   }
 }
 
