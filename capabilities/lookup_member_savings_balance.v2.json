@@ -48,7 +48,7 @@
   "steps": [
     {
       "index": 0,
-      "intent": "Enter operator ID to sign on",
+      "intent": "Enter the operator ID to sign on",
       "action": "fill",
       "target": {
         "description": "the textbox \"Operator ID\"",
@@ -99,7 +99,7 @@
     },
     {
       "index": 1,
-      "intent": "Enter password to sign on",
+      "intent": "Enter the password to sign on",
       "action": "fill",
       "target": {
         "description": "the textbox \"Password\"",
@@ -226,7 +226,7 @@
     },
     {
       "index": 4,
-      "intent": "Search for member {memberId}",
+      "intent": "Run the member search",
       "action": "click",
       "target": {
         "description": "the button \"Search\"",
@@ -293,10 +293,10 @@
       "risk": "safe_reversible",
       "waitMs": 0,
       "checkpoint": {
-        "description": "The screen shows \"Account\".",
+        "description": "The screen shows \"Balance\".",
         "detector": {
           "kind": "text_present",
-          "text": "Account"
+          "text": "Balance"
         }
       }
     }
@@ -312,6 +312,15 @@
     }
   },
   "knownOutcomes": [
+    {
+      "code": "SIGN_ON_FAILED",
+      "description": "The application rejected the supplied operator credentials. A legitimate answer, not a fault: retrying cannot help, and neither can a person taking over the session, because the credential the caller holds is the one that is wrong. Without this outcome the run goes on to look for the next screen's controls, fails as target_not_found, and — with escalation enabled — pages an operator over a wrong password.",
+      "detector": {
+        "kind": "text_present",
+        "text": "Sign-on failed"
+      },
+      "terminal": true
+    },
     {
       "code": "MEMBER_NOT_FOUND",
       "description": "No member exists with the supplied ID. A legitimate answer, not a failure.",
@@ -389,10 +398,10 @@
     }
   ],
   "provenance": {
-    "discoveryRunId": "discovery-2026-09-12T19-48-38",
+    "discoveryRunId": "discovery-2026-09-14T22-10-03",
     "goal": "Sign on with operator ID '{operatorId}' and password '[REDACTED]', then look up member {memberId} and read their current savings balance.",
     "model": "claude-opus-5",
-    "recordedAt": "2026-09-12T19:48:53.549Z",
+    "recordedAt": "2026-09-14T22:10:17.610Z",
     "tracedSteps": 6,
     "revisions": [
       {

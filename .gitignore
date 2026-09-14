@@ -5,12 +5,14 @@
 !.env.example
 
 # --- Raw run output ----------------------------------------------------------
-# The evidence bus writes unredacted run output here: full DOM snapshots,
-# Playwright traces, screenshots, raw model transcripts. It may contain
-# credentials, tokens, and PII, so it is never committed.
+# Every run writes its evidence bundle here: the structured event log, the
+# result, failure screenshots and accessibility-tree snapshots. Text is redacted
+# as it is written, but screenshots show whatever was on screen, so raw run
+# output is never committed.
 #
-# Curated, redacted bundles are promoted into /evidence/, which IS committed
-# as a deliverable. See src/evidence/ for the promote step.
+# /evidence/ IS committed as a deliverable. The scenario scripts write their
+# bundles there directly; a discovery run is copied there deliberately, by hand,
+# after it has been reviewed.
 .runs/
 
 # --- Dependencies & build ----------------------------------------------------

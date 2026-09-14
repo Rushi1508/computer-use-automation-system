@@ -30,10 +30,10 @@ export interface PolicyDecision {
 /**
  * How reversible an action is.
  *
- * During discovery this is inferred. During replay it is read from the
- * artifact, where a human reviewed it — inference is a reasonable way to decide
- * whether to interrupt an exploring agent, but a poor basis for deciding
- * whether an unattended production run may move money.
+ * During discovery this is inferred. During replay the artifact's reviewed class
+ * is combined with inference and the more cautious wins: a reviewer can mark a
+ * step irreversible that inference would miss, but an artifact cannot mark a
+ * step reversible when the live control reads as irreversible.
  */
 export type RiskClass = "safe_reversible" | "risky_irreversible";
 
@@ -43,10 +43,12 @@ export interface PolicyContext {
   readonly mode: PolicyMode;
   /**
    * Replay only. An approved capability has had its risky steps reviewed, so
-   * they do not re-prompt on every invocation; a draft still does.
+   * they do not re-prompt on every invocation; a draft still does. True only
+   * when a detached approval record's digest matches the artifact (see
+   * schema/approval.ts), never on the artifact's own say-so.
    */
   readonly capabilityApproved?: boolean;
-  /** Replay only. The risk class the artifact declares for this step. */
+  /** Replay only. The risk class the artifact declares for this step. It can raise the policy's classification, never lower it. */
   readonly declaredRisk?: RiskClass;
 }
 
@@ -86,9 +88,12 @@ export function defaultPolicyConfig(origin: string): PolicyConfig {
     allowedOrigins: [origin],
     allowedPathPrefixes: ["/"],
     allowedActions: ["click", "fill", "select", "navigate", "wait", "read"],
+    // Not "open sub-account": in this application that button only opens the
+    // form, and nothing is created until "Open Account" posts it. A vocabulary
+    // false positive is corrected here, in policy, because a capability cannot
+    // declare a flagged control reversible on its own authority.
     riskyControlPatterns: [
       "open account",
-      "open sub-account",
       "submit",
       "confirm",
       "post",

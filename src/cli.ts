@@ -13,15 +13,17 @@
 
 import "dotenv/config";
 
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import type { Server } from "node:http";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+
+import { z } from "zod";
 
 import { runDiscovery } from "./agent/loop.js";
 import { Catalog, CAPABILITY_DIR } from "./catalog/catalog.js";
 import { formatCapabilityDescription, formatCatalogList } from "./catalog/format.js";
 import { compile } from "./compiler/compile.js";
-import { parseReview, reviseCapability } from "./compiler/revise.js";
+import { ReviewSchema, reviseCapability, RevisionError } from "./compiler/revise.js";
 import { HandoffDesk } from "./escalation/desk.js";
 import { createOperatorApp } from "./escalation/operator-server.js";
 import type { EscalationHandler } from "./escalation/types.js";
@@ -30,10 +32,13 @@ import type { Surface } from "./perception/types.js";
 import { launchWebSurface, type PlaywrightWebSurface } from "./perception/web-playwright.js";
 import { autoApprove, denyByDefault } from "./policy/confirm.js";
 import { PolicyEngine } from "./policy/engine.js";
+import { redactor } from "./policy/redactor.js";
 import { defaultPolicyConfig } from "./policy/types.js";
 import { exitCodeFor, replay, validateInputs } from "./replay/engine.js";
 import { formatReplayResult } from "./replay/format.js";
-import { parseCapability, type Capability } from "./schema/capability.js";
+import { approvalRecordFor, approvalRecordPath } from "./schema/approval.js";
+import type { Capability } from "./schema/capability.js";
+import { describeSchemaError, readCapabilityFile, readJsonFile } from "./schema/load.js";
 import { LeasedSurface, SessionLease } from "./session/lease.js";
 
 type Command = "discover" | "replay" | "revise" | "capabilities";
@@ -57,11 +62,17 @@ ${rows}
 discover options:
   --goal <text>             Natural-language goal (required)
   --url <url>               Entrypoint URL (required)
+  --secret-env <VAR>        Declare a credential the goal uses, read from an environment
+                            variable. Repeatable. Write {{VAR}} in --goal where it belongs:
+                            the value is substituted for the model and registered for
+                            redaction before anything is logged, so it never reaches the
+                            evidence and never appears in shell history.
   --max-steps <n>           Step budget (default 30)
   --max-ms <n>              Wall-clock budget in ms (default 300000)
   --max-cost <usd>          Hard ceiling on estimated model spend (default 0.75)
   --effort <level>          low|medium|high|xhigh|max (default from ANTHROPIC_EFFORT)
-  --capability <id>         snake_case id for the emitted artifact (enables compilation)
+  --capability <id>         snake_case id for the emitted artifact (enables compilation).
+                            Refuses to overwrite an existing version.
   --app-profile <id>        Application profile supplying the outcome vocabulary
                             (default meridian_core)
   --headed                  Show the browser window
@@ -85,6 +96,10 @@ capabilities subcommands:
   tools                     The JSON tool definitions an agent is given for the catalog
   invoke <id>               Replay a capability by id. Takes the same --input, --input-env,
                             --entrypoint, --headed and handoff options as replay.
+  approve <id>              Record a reviewer's approval of one version, bound to a digest of
+                            its content. Requires --reviewer <name>; takes --note <text>. An
+                            approved capability runs its irreversible steps unattended; any
+                            later edit to the artifact voids the approval.
 
 capabilities options:
   --version <n>             Pin a version. Default: the highest version of that capability
@@ -105,6 +120,8 @@ handoff options (discover and replay):
 
   replay and capabilities invoke exit codes:
     0 succeeded, 2 business outcome (a legitimate answer), 1 failed.
+
+  Set CUA_DEBUG=1 to print a stack trace for an unexpected error.
 `;
 }
 
@@ -226,6 +243,41 @@ async function discover(args: Args): Promise<number> {
   const entry = readUrl(url, "--url");
   if (entry === null) return 1;
 
+  // Credentials are declared, not typed into the goal. Each --secret-env value
+  // is registered for redaction before the run writes anything, and substituted
+  // for its {{VAR}} placeholder only in the goal handed to the model.
+  const secrets: string[] = [];
+  let resolvedGoal = goal;
+  for (const variable of args.multi.get("secret-env") ?? []) {
+    const value = process.env[variable];
+    if (value === undefined || value === "") {
+      process.stderr.write(`--secret-env ${variable}: environment variable is not set\n`);
+      return 1;
+    }
+    secrets.push(value);
+    redactor.registerSecret(value);
+    resolvedGoal = resolvedGoal.split(`{{${variable}}}`).join(value);
+  }
+  const unresolved = resolvedGoal.match(/\{\{[A-Za-z_][A-Za-z0-9_]*\}\}/g);
+  if (unresolved !== null) {
+    process.stderr.write(`--goal uses ${[...new Set(unresolved)].join(", ")} but no matching --secret-env was given\n`);
+    return 1;
+  }
+  // What the goal looks like with only declared secrets and known patterns
+  // masked. If it redacts differently after the run, the agent typed a
+  // credential into a password field that nobody declared.
+  const goalAsDeclared = redactor.redactText(resolvedGoal);
+
+  // Checked before the run, so a recording that could not be saved costs nothing.
+  const capabilityId = args.values.get("capability");
+  if (capabilityId !== undefined && existsSync(join(CAPABILITY_DIR, `${capabilityId}.v1.json`))) {
+    process.stderr.write(
+      `${join(CAPABILITY_DIR, `${capabilityId}.v1.json`)} already exists. Versions are immutable: record under a ` +
+        `new --capability id, or remove the old version deliberately first.\n`,
+    );
+    return 1;
+  }
+
   const policy = new PolicyEngine(defaultPolicyConfig(entry.origin));
   const evidence = new EvidenceBus(newRunId("discovery"));
   const inner = await launchWebSurface({ headed: args.flags.has("headed") });
@@ -236,7 +288,8 @@ async function discover(args: Args): Promise<number> {
 
   try {
     const result = await runDiscovery({
-      goal,
+      goal: resolvedGoal,
+      secrets,
       entrypoint: url,
       surface: handoff?.surface ?? inner,
       policy,
@@ -280,7 +333,14 @@ async function discover(args: Args): Promise<number> {
     // one exploration, an artifact is a reusable contract, and keeping the
     // boundary visible means a recording can be re-compiled without re-running
     // the model.
-    const capabilityId = args.values.get("capability");
+    if (redactor.redactText(resolvedGoal) !== goalAsDeclared) {
+      process.stderr.write(
+        "warning: the goal contained a credential that was not declared with --secret-env. It has been scrubbed " +
+          "from the event log, but was on disk in the clear until the agent typed it. Write {{VAR}} in the goal " +
+          "and pass --secret-env VAR instead.\n",
+      );
+    }
+
     if (result.status === "succeeded" && capabilityId !== undefined) {
       const { capability, notes } = compile(result, {
         id: capabilityId,
@@ -290,8 +350,8 @@ async function discover(args: Args): Promise<number> {
         model: process.env["ANTHROPIC_MODEL"] ?? "claude-opus-5",
       });
 
-      const file = join("capabilities", `${capability.id}.v${capability.version}.json`);
-      writeFileSync(file, `${JSON.stringify(capability, null, 2)}\n`, "utf8");
+      const file = join(CAPABILITY_DIR, `${capability.id}.v${capability.version}.json`);
+      writeFileSync(file, `${JSON.stringify(capability, null, 2)}\n`, { encoding: "utf8", flag: "wx" });
 
       process.stdout.write(
         [
@@ -364,6 +424,21 @@ function collectInputs(capability: Capability, args: Args): { inputs: Record<str
   return problems.length > 0 ? { problems } : { inputs };
 }
 
+/**
+ * Loads an artifact through the shared loader, printing a readable problem
+ * instead of throwing. Warnings, such as an approval that no longer holds, are
+ * printed but do not stop the command: the capability simply runs as a draft.
+ */
+function loadArtifact(file: string): Capability | null {
+  const loaded = readCapabilityFile(file);
+  if (!loaded.ok) {
+    process.stderr.write(`Cannot load ${file}: it ${loaded.problem}\n`);
+    return null;
+  }
+  for (const warning of loaded.warnings) process.stderr.write(`warning: ${file} ${warning}\n`);
+  return loaded.capability;
+}
+
 /** Replays a capability the caller has already resolved, by file or by catalog id. */
 async function runReplay(capability: Capability, args: Args): Promise<number> {
   const collected = collectInputs(capability, args);
@@ -420,7 +495,8 @@ async function replayCommand(args: Args): Promise<number> {
     process.stderr.write("replay requires --capability <file>\n\n" + usage());
     return 1;
   }
-  return runReplay(parseCapability(JSON.parse(readFileSync(file, "utf8"))), args);
+  const capability = loadArtifact(file);
+  return capability === null ? 1 : runReplay(capability, args);
 }
 
 /**
@@ -447,7 +523,7 @@ async function capabilitiesCommand(args: Args): Promise<number> {
     return 0;
   }
 
-  if (subcommand !== "describe" && subcommand !== "invoke") {
+  if (subcommand !== "describe" && subcommand !== "invoke" && subcommand !== "approve") {
     process.stderr.write(`Unknown capabilities subcommand '${subcommand}'.\n\n${usage()}`);
     return 1;
   }
@@ -480,6 +556,38 @@ async function capabilitiesCommand(args: Args): Promise<number> {
     return 0;
   }
 
+  if (subcommand === "approve") {
+    const reviewer = args.values.get("reviewer")?.trim();
+    if (reviewer === undefined || reviewer === "") {
+      process.stderr.write("capabilities approve requires --reviewer <name>\n");
+      return 1;
+    }
+    const { capability, file } = resolution.selected;
+    const out = approvalRecordPath(file, capability.id, capability.version);
+    const record = approvalRecordFor(capability, reviewer, args.values.get("note") ?? "");
+    mkdirSync(dirname(out), { recursive: true });
+    try {
+      writeFileSync(out, `${JSON.stringify(record, null, 2)}\n`, { encoding: "utf8", flag: "wx" });
+    } catch {
+      process.stderr.write(
+        `${out} already exists. An approval covers one version's exact content; a changed artifact is a new ` +
+          `version and needs its own approval.\n`,
+      );
+      return 1;
+    }
+    const held = capability.steps.filter((s) => s.risk === "risky_irreversible").length;
+    process.stdout.write(
+      [
+        `Approved ${capability.id} v${capability.version} (${out})`,
+        `  digest: ${record.digest}`,
+        `  ${held} declared irreversible step(s) will now run without a person confirming each one.`,
+        "  Any edit to the artifact changes its digest and voids this approval.",
+        "",
+      ].join("\n"),
+    );
+    return 0;
+  }
+
   // Refusing to run a capability whose profile is missing is not pedantry: its
   // outcome vocabulary lives there, so without it a legitimate business answer
   // would come back as a failure.
@@ -490,6 +598,9 @@ async function capabilitiesCommand(args: Args): Promise<number> {
   }
 
   const { capability } = resolution.selected;
+  for (const problem of catalog.problems.filter((p) => p.file === resolution.selected.file)) {
+    process.stderr.write(`warning: ${problem.file} ${problem.message}\n`);
+  }
   process.stdout.write(`Capability: ${capability.id} v${capability.version} (${resolution.selected.file})\n`);
   return runReplay(capability, args);
 }
@@ -502,8 +613,38 @@ async function reviseCommand(args: Args): Promise<number> {
     return 1;
   }
 
-  const base = parseCapability(JSON.parse(readFileSync(file, "utf8")));
-  const revised = reviseCapability(base, parseReview(JSON.parse(readFileSync(reviewFile, "utf8"))));
+  const base = loadArtifact(file);
+  if (base === null) return 1;
+
+  const reviewJson = readJsonFile(reviewFile);
+  if (!reviewJson.ok) {
+    process.stderr.write(`Cannot load ${reviewFile}: it ${reviewJson.problem}\n`);
+    return 1;
+  }
+  const review = ReviewSchema.safeParse(reviewJson.value);
+  if (!review.success) {
+    process.stderr.write(
+      `Cannot load ${reviewFile}: it is not a valid review:\n${describeSchemaError(review.error).map((l) => `  - ${l}`).join("\n")}\n`,
+    );
+    return 1;
+  }
+
+  let revised: Capability;
+  try {
+    revised = reviseCapability(base, review.data);
+  } catch (error) {
+    if (error instanceof RevisionError) {
+      process.stderr.write(`Cannot apply ${reviewFile}: ${error.message}\n`);
+      return 1;
+    }
+    if (error instanceof z.ZodError) {
+      process.stderr.write(
+        `Cannot apply ${reviewFile}: the revised artifact would be invalid:\n${describeSchemaError(error).map((l) => `  - ${l}`).join("\n")}\n`,
+      );
+      return 1;
+    }
+    throw error;
+  }
   const out = join("capabilities", `${revised.id}.v${revised.version}.json`);
   if (existsSync(out)) {
     process.stderr.write(`${out} already exists. Versions are immutable: a changed artifact is a new version.\n`);
@@ -553,7 +694,12 @@ main(process.argv.slice(2)).then(
     process.exitCode = code;
   },
   (error: unknown) => {
-    process.stderr.write(`${error instanceof Error ? error.stack : String(error)}\n`);
+    // Anything that reaches here is unexpected. A stack trace is noise to
+    // someone running a command and can carry absolute paths, so it is shown
+    // only when asked for.
+    const debug = process.env["CUA_DEBUG"] === "1";
+    const detail = error instanceof Error ? (debug ? (error.stack ?? error.message) : error.message) : String(error);
+    process.stderr.write(`error: ${detail}\n${debug ? "" : "(set CUA_DEBUG=1 for a stack trace)\n"}`);
     process.exitCode = 1;
   },
 );

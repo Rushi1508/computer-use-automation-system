@@ -36,14 +36,13 @@
  *    attached than to leave someone wondering where their capability went.
  */
 
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync } from "node:fs";
 import { join } from "node:path";
-
-import { z } from "zod";
 
 import type { ToolDefinition } from "../agent/tools.js";
 import { appProfile } from "../schema/app-profile.js";
-import { invocationSchema, parseCapability, type Capability } from "../schema/capability.js";
+import { invocationSchema, type Capability } from "../schema/capability.js";
+import { readCapabilityFile } from "../schema/load.js";
 
 /** Where artifacts live. Subdirectories are not scanned, which keeps `reviews/` out. */
 export const CAPABILITY_DIR = "capabilities";
@@ -187,8 +186,9 @@ export class Catalog {
 
   /**
    * Scans a directory of artifacts. Only files directly inside it are read, so
-   * `capabilities/reviews/` — which holds proposed edits, not capabilities —
-   * is skipped by construction rather than by a name check that could rot.
+   * `capabilities/reviews/` and `capabilities/approvals/`, which hold proposed
+   * edits and approval records rather than capabilities, are skipped by
+   * construction rather than by a name check that could rot.
    */
   static load(dir: string = CAPABILITY_DIR): Catalog {
     const items: VersionedCapability[] = [];
@@ -201,24 +201,30 @@ export class Catalog {
         .map((e) => e.name)
         .sort();
     } catch (error) {
-      return new Catalog([], [{ file: dir, message: `cannot be read: ${reason(error)}` }]);
+      const code = (error as NodeJS.ErrnoException).code;
+      const why = code === "ENOENT" ? "does not exist" : code === "ENOTDIR" ? "is not a directory" : "cannot be read";
+      return new Catalog([], [{ file: dir, message: why }]);
     }
 
     for (const name of listing) {
       const file = join(dir, name);
-      try {
-        const capability = parseCapability(JSON.parse(readFileSync(file, "utf8")));
-        const expected = `${capability.id}.v${capability.version}.json`;
-        if (name !== expected) {
-          // The rest of the system writes and reads artifacts by this
-          // convention, so a file that breaks it is one someone will later
-          // fail to find — or will overwrite believing it to be another version.
-          problems.push({ file, message: `holds ${capability.id} v${capability.version}, so it should be named ${expected}` });
-        }
-        items.push({ capability, file });
-      } catch (error) {
-        problems.push({ file, message: reason(error) });
+      // The same loader every command uses, so the catalog shows exactly the
+      // validation result and approval state an invocation would get.
+      const loaded = readCapabilityFile(file);
+      if (!loaded.ok) {
+        problems.push({ file, message: loaded.problem });
+        continue;
       }
+      const { capability } = loaded;
+      for (const warning of loaded.warnings) problems.push({ file, message: warning });
+      const expected = `${capability.id}.v${capability.version}.json`;
+      if (name !== expected) {
+        // The rest of the system writes and reads artifacts by this
+        // convention, so a file that breaks it is one someone will later
+        // fail to find — or will overwrite believing it to be another version.
+        problems.push({ file, message: `holds ${capability.id} v${capability.version}, so it should be named ${expected}` });
+      }
+      items.push({ capability, file });
     }
 
     return Catalog.from(items, problems);
@@ -330,8 +336,5 @@ function blockersFor(capability: Capability): string[] {
 }
 
 function reason(error: unknown): string {
-  // A schema failure is the common case here, and its raw JSON dump is close to
-  // unreadable in a listing. Prettified, it names the field that is wrong.
-  if (error instanceof z.ZodError) return z.prettifyError(error).replace(/\s*\n\s*/g, "; ");
   return error instanceof Error ? error.message : String(error);
 }

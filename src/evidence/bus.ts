@@ -101,6 +101,24 @@ export class EvidenceBus {
     writeFileSync(file, JSON.stringify(redactor.redactDeep(result), null, 2), "utf8");
     return file;
   }
+
+  /**
+   * Re-applies redaction to the event log with every secret known now.
+   *
+   * Events are redacted as they are written, against the secrets registered at
+   * that moment. A credential registered later, typed into a password field
+   * after the goal that contained it was logged, would otherwise stay in the
+   * earlier lines. Redaction is idempotent, so this is safe to call again.
+   */
+  rescrub(): void {
+    const scrubbed = this.#events.map((event) => ({
+      ...event,
+      message: redactor.redactText(event.message),
+      ...(event.data === undefined ? {} : { data: redactor.redactDeep(event.data) }),
+    }));
+    this.#events.splice(0, this.#events.length, ...scrubbed);
+    writeFileSync(join(this.dir, "events.jsonl"), scrubbed.map((event) => `${JSON.stringify(event)}\n`).join(""), "utf8");
+  }
 }
 
 export function newRunId(prefix: string): string {

@@ -13,7 +13,7 @@
  * No model and no API key. Exits non-zero if any scenario does not end as expected.
  */
 
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import type { Server } from "node:http";
 import { join } from "node:path";
 
@@ -27,7 +27,8 @@ import { PolicyEngine } from "../src/policy/engine.js";
 import { defaultPolicyConfig } from "../src/policy/types.js";
 import { replay, type ReplayResult } from "../src/replay/engine.js";
 import { formatReplayResult } from "../src/replay/format.js";
-import { type Capability, parseCapability } from "../src/schema/capability.js";
+import type { Capability } from "../src/schema/capability.js";
+import { readCapabilityFile } from "../src/schema/load.js";
 import { LeasedSurface, SessionLease } from "../src/session/lease.js";
 
 const ROOT = join("evidence", "handoff");
@@ -35,8 +36,12 @@ const ROOT = join("evidence", "handoff");
 /** The demo application's published sign-on password, shown on its own login screen. */
 const PASSWORD = process.env["MERIDIAN_PASSWORD"] ?? "demo";
 
-const load = (file: string): Capability => parseCapability(JSON.parse(readFileSync(file, "utf8")));
-const LOOKUP = load(join("capabilities", "lookup_member_savings_balance.v3.json"));
+const load = (file: string): Capability => {
+  const loaded = readCapabilityFile(file);
+  if (!loaded.ok) throw new Error(`Cannot load ${file}: it ${loaded.problem}`);
+  return loaded.capability;
+};
+const LOOKUP = load(join("capabilities", "lookup_member_savings_balance.v2.json"));
 const OPEN_ACCOUNT = load(join("capabilities", "open_sub_account.v2.json"));
 
 interface Scenario {

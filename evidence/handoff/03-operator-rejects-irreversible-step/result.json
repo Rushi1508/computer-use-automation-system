@@ -5,7 +5,7 @@
     "stepIndex": 8,
     "stepIntent": "Open the account",
     "expected": "a person to approve: 'Open Account' looks irreversible. A person should decide before it runs.",
-    "observed": "refused by operator operator-sam: Certificate opening above the unattended limit; needs branch manager sign-off. | title \"MERIDIAN CORE\" at http://127.0.0.1:65342/ showing: (top) (no document body; content is in child frames) navmenu text: Navigation link \"Member Search\": /url: /content link \"Account Servicing\": /url: /content link \"Sign Off\": /url: /logout main table: rowgroup: row \"MERIDIAN CORE — Member Servicing\": cell \"MERIDIAN CORE — Member Servicing\" row \"Open Sub-Account - 12345\": cell \"Open Sub-Account - 12345\" paragraph: Opening a new sub-account for Dolore…",
+    "observed": "refused by operator operator-sam: Certificate opening above the unattended limit; needs branch manager sign-off. | title \"MERIDIAN CORE\" at http://127.0.0.1:63220/ showing: (top) (no document body; content is in child frames) navmenu text: Navigation link \"Member Search\": /url: /content link \"Account Servicing\": /url: /content link \"Sign Off\": /url: /logout main table: rowgroup: row \"MERIDIAN CORE — Member Servicing\": cell \"MERIDIAN CORE — Member Servicing\" row \"Open Sub-Account - 12345\": cell \"Open Sub-Account - 12345\" paragraph: Opening a new sub-account for Dolore…",
     "escalatable": false,
     "evidence": {
       "screenshot": "evidence\\handoff\\03-operator-rejects-irreversible-step\\screenshots\\failure-step-8.png",
@@ -15,15 +15,15 @@
   "capabilityId": "open_sub_account",
   "capabilityVersion": 2,
   "runId": "03-operator-rejects-irreversible-step",
-  "entrypoint": "http://127.0.0.1:65342/",
-  "startedAt": "2026-09-13T01:09:06.476Z",
-  "elapsedMs": 2756,
+  "entrypoint": "http://127.0.0.1:63220/",
+  "startedAt": "2026-09-14T22:13:02.190Z",
+  "elapsedMs": 4128,
   "steps": [
     {
       "index": 0,
       "action": "fill",
       "intent": "Enter the operator ID to sign on",
-      "durationMs": 123,
+      "durationMs": 261,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -37,7 +37,7 @@
       "index": 1,
       "action": "fill",
       "intent": "Enter the password to sign on",
-      "durationMs": 65,
+      "durationMs": 172,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -51,7 +51,7 @@
       "index": 2,
       "action": "click",
       "intent": "Submit the sign-on form",
-      "durationMs": 488,
+      "durationMs": 697,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -65,7 +65,7 @@
       "index": 3,
       "action": "fill",
       "intent": "Enter the member ID to look up",
-      "durationMs": 99,
+      "durationMs": 170,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -79,7 +79,7 @@
       "index": 4,
       "action": "click",
       "intent": "Search for the member",
-      "durationMs": 451,
+      "durationMs": 568,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -93,7 +93,7 @@
       "index": 5,
       "action": "click",
       "intent": "Open the sub-account form for this member",
-      "durationMs": 459,
+      "durationMs": 629,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -107,7 +107,7 @@
       "index": 6,
       "action": "select",
       "intent": "Choose the account type",
-      "durationMs": 110,
+      "durationMs": 251,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -121,7 +121,7 @@
       "index": 7,
       "action": "fill",
       "intent": "Enter the initial deposit",
-      "durationMs": 115,
+      "durationMs": 290,
       "polls": 0,
       "resolvedBy": {
         "kind": "anchored_row",
@@ -144,7 +144,7 @@
       "resolution": "reject",
       "note": "Certificate opening above the unattended limit; needs branch manager sign-off.",
       "operatorActions": 0,
-      "pausedMs": 397
+      "pausedMs": 511
     }
   ]
 }

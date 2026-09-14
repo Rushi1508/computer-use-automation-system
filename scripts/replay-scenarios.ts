@@ -17,7 +17,7 @@
  * which makes it a regression check as well as an evidence generator.
  */
 
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import type { Server } from "node:http";
 import { join } from "node:path";
 
@@ -28,10 +28,10 @@ import { PolicyEngine } from "../src/policy/engine.js";
 import { defaultPolicyConfig } from "../src/policy/types.js";
 import { replay, type ReplayResult } from "../src/replay/engine.js";
 import { formatReplayResult } from "../src/replay/format.js";
-import { parseCapability } from "../src/schema/capability.js";
+import { readCapabilityFile } from "../src/schema/load.js";
 
 const ROOT = join("evidence", "replay");
-const CAPABILITY_FILE = process.argv[2] ?? join("capabilities", "lookup_member_savings_balance.v3.json");
+const CAPABILITY_FILE = process.argv[2] ?? join("capabilities", "lookup_member_savings_balance.v2.json");
 
 /**
  * The demo application's published sign-on password, shown on its own login
@@ -181,7 +181,9 @@ async function control(base: string, path: string, body?: Readonly<Record<string
 }
 
 async function main(): Promise<number> {
-  const capability = parseCapability(JSON.parse(readFileSync(CAPABILITY_FILE, "utf8")));
+  const loaded = readCapabilityFile(CAPABILITY_FILE);
+  if (!loaded.ok) throw new Error(`Cannot load ${CAPABILITY_FILE}: it ${loaded.problem}`);
+  const capability = loaded.capability;
 
   const server = await new Promise<Server>((resolve) => {
     const listening = createApp().listen(0, "127.0.0.1", () => resolve(listening));

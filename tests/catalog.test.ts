@@ -391,3 +391,14 @@ describe("the shipped catalog", () => {
     expect(catalog.toolDefinitions().length).toBe(catalog.entries.length);
   });
 });
+
+describe("approval in the catalog", () => {
+  it("reports an artifact that approves itself, and offers it as the draft it is", () => {
+    const catalog = Catalog.load(directory({ "lookup_balance.v1.json": capability({ approvalState: "approved", risky: true }) }));
+    const entry = catalog.get("lookup_balance");
+
+    expect(entry?.latest.capability.approvalState).toBe("draft");
+    expect(catalog.problems.map((p) => p.message).join("\n")).toContain("declares itself approved");
+    expect(entry === undefined ? "" : toolDescription(entry.latest.capability)).toContain("pauses for a human operator");
+  });
+});

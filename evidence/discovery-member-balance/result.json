@@ -1,12 +1,12 @@
 {
   "status": "succeeded",
-  "summary": "Signed on as op-[REDACTED], looked up member 12345 (Dolores Abernathy); savings account 0002-8891 balance is $14,820.37.",
+  "summary": "Signed on as op-[REDACTED], searched member 12345 (Dolores Abernathy), and read the savings account (0002-8891) balance: $14,820.37.",
   "goal": "Sign on with operator ID 'op-[REDACTED]' and password '[REDACTED]', then look up member 12345 and read their current savings balance.",
   "entrypoint": "http://127.0.0.1:4173/",
   "trace": [
     {
       "index": 0,
-      "intent": "Enter operator ID to sign on",
+      "intent": "Enter the operator ID to sign on",
       "action": {
         "kind": "fill",
         "nodeId": 0,
@@ -70,11 +70,12 @@
         "reason": "Action is reversible and read-only in effect."
       },
       "ok": true,
-      "at": "2026-09-12T19:48:42.984Z"
+      "actor": "agent",
+      "at": "2026-09-14T22:10:08.027Z"
     },
     {
       "index": 1,
-      "intent": "Enter password to sign on",
+      "intent": "Enter the password to sign on",
       "action": {
         "kind": "fill",
         "nodeId": 1,
@@ -138,7 +139,8 @@
         "reason": "Action is reversible and read-only in effect."
       },
       "ok": true,
-      "at": "2026-09-12T19:48:43.114Z"
+      "actor": "agent",
+      "at": "2026-09-14T22:10:08.098Z"
     },
     {
       "index": 2,
@@ -183,7 +185,8 @@
         "reason": "Action is reversible and read-only in effect."
       },
       "ok": true,
-      "at": "2026-09-12T19:48:45.705Z"
+      "actor": "agent",
+      "at": "2026-09-14T22:10:10.655Z"
     },
     {
       "index": 3,
@@ -253,11 +256,12 @@
         "reason": "Action is reversible and read-only in effect."
       },
       "ok": true,
-      "at": "2026-09-12T19:48:47.893Z"
+      "actor": "agent",
+      "at": "2026-09-14T22:10:12.849Z"
     },
     {
       "index": 4,
-      "intent": "Search for member 12345",
+      "intent": "Run the member search",
       "action": {
         "kind": "click",
         "nodeId": 4
@@ -308,7 +312,8 @@
         "reason": "Action is reversible and read-only in effect."
       },
       "ok": true,
-      "at": "2026-09-12T19:48:50.553Z"
+      "actor": "agent",
+      "at": "2026-09-14T22:10:15.218Z"
     },
     {
       "index": 5,
@@ -373,24 +378,26 @@
       "ok": true,
       "outputName": "savingsBalance",
       "extracted": "$14,820.37",
-      "at": "2026-09-12T19:48:53.549Z"
+      "actor": "agent",
+      "at": "2026-09-14T22:10:17.610Z"
     }
   ],
   "checkpoints": [
     {
       "afterStep": 5,
-      "description": "Member detail page shows account table with \"Savings\" row",
-      "verifiedText": "Account"
+      "description": "Member detail page loaded showing account table with \"Savings\" row and column header \"Balance\"",
+      "verifiedText": "Balance"
     }
   ],
   "outputs": {
     "savingsBalance": "$14,820.37"
   },
   "steps": 6,
-  "elapsedMs": 16887,
+  "elapsedMs": 17592,
   "usage": {
-    "turns": 6,
-    "costUsd": 0.08125,
+    "turns": 7,
+    "costUsd": 0.08638,
     "cacheWorking": true
-  }
+  },
+  "interventions": []
 }

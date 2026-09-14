@@ -4,17 +4,17 @@
     "savingsBalance": "$14,820.37"
   },
   "capabilityId": "lookup_member_savings_balance",
-  "capabilityVersion": 3,
+  "capabilityVersion": 2,
   "runId": "07-recovered-slow-load",
-  "entrypoint": "http://127.0.0.1:60982/",
-  "startedAt": "2026-09-13T01:08:36.665Z",
-  "elapsedMs": 4519,
+  "entrypoint": "http://127.0.0.1:57029/",
+  "startedAt": "2026-09-14T22:12:24.380Z",
+  "elapsedMs": 6256,
   "steps": [
     {
       "index": 0,
       "action": "fill",
-      "intent": "Enter operator ID to sign on",
-      "durationMs": 116,
+      "intent": "Enter the operator ID to sign on",
+      "durationMs": 309,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -27,8 +27,8 @@
     {
       "index": 1,
       "action": "fill",
-      "intent": "Enter password to sign on",
-      "durationMs": 62,
+      "intent": "Enter the password to sign on",
+      "durationMs": 250,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -42,7 +42,7 @@
       "index": 2,
       "action": "click",
       "intent": "Submit credentials to sign on",
-      "durationMs": 481,
+      "durationMs": 759,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -56,7 +56,7 @@
       "index": 3,
       "action": "fill",
       "intent": "Enter member ID to look up",
-      "durationMs": 96,
+      "durationMs": 280,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -69,8 +69,8 @@
     {
       "index": 4,
       "action": "click",
-      "intent": "Search for member {memberId}",
-      "durationMs": 395,
+      "intent": "Run the member search",
+      "durationMs": 644,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -84,8 +84,8 @@
       "index": 5,
       "action": "read",
       "intent": "Capture the savings account balance requested by the goal",
-      "durationMs": 3004,
-      "polls": 9,
+      "durationMs": 3437,
+      "polls": 6,
       "resolvedBy": {
         "kind": "grid_cell",
         "rank": 0,
@@ -101,7 +101,7 @@
       "atStep": 5,
       "remedy": "bounded_wait",
       "attempt": 1,
-      "detail": "waited 2843ms for the \"Balance\" value in the row containing \"Savings\" to render"
+      "detail": "waited 2855ms for the \"Balance\" value in the row containing \"Savings\" to render"
     }
   ],
   "drift": [],

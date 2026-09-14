@@ -2,22 +2,22 @@
   "status": "business_outcome",
   "outcome": {
     "code": "SIGN_ON_FAILED",
-    "description": "The application rejected the supplied operator credentials. Retrying cannot help, and neither can a person taking over the session, because the credential the caller holds is the one that is wrong.",
+    "description": "The application rejected the supplied operator credentials. A legitimate answer, not a fault: retrying cannot help, and neither can a person taking over the session, because the credential the caller holds is the one that is wrong. Without this outcome the run goes on to look for the next screen's controls, fails as target_not_found, and — with escalation enabled — pages an operator over a wrong password.",
     "basis": "text \"Sign-on failed\" is on screen"
   },
   "atStep": 3,
   "capabilityId": "lookup_member_savings_balance",
-  "capabilityVersion": 3,
+  "capabilityVersion": 2,
   "runId": "13-outcome-sign-on-failed",
-  "entrypoint": "http://127.0.0.1:60982/",
-  "startedAt": "2026-09-13T01:08:49.655Z",
-  "elapsedMs": 882,
+  "entrypoint": "http://127.0.0.1:57029/",
+  "startedAt": "2026-09-14T22:12:45.404Z",
+  "elapsedMs": 1402,
   "steps": [
     {
       "index": 0,
       "action": "fill",
-      "intent": "Enter operator ID to sign on",
-      "durationMs": 116,
+      "intent": "Enter the operator ID to sign on",
+      "durationMs": 295,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -30,8 +30,8 @@
     {
       "index": 1,
       "action": "fill",
-      "intent": "Enter password to sign on",
-      "durationMs": 62,
+      "intent": "Enter the password to sign on",
+      "durationMs": 183,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -45,7 +45,7 @@
       "index": 2,
       "action": "click",
       "intent": "Submit credentials to sign on",
-      "durationMs": 392,
+      "durationMs": 562,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",

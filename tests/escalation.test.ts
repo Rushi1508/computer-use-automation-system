@@ -302,7 +302,8 @@ describe("discovery hands the live session to a person", () => {
     const { desk: d, lease, evidence } = desk();
     const { client, requests } = scriptedClient([
       toolUse("t1", "escalate", { reason: "The search form is not where I expected it." }),
-      toolUse("t2", "done", { summary: "Operator restored the form." }),
+      toolUse("t2", "checkpoint", { description: 'The "Sign On" button is showing again' }),
+      toolUse("t3", "done", { summary: "Operator restored the form." }),
     ]);
 
     const [result] = await Promise.all([
@@ -332,7 +333,8 @@ describe("discovery hands the live session to a person", () => {
       wrongClick("t1"),
       wrongClick("t2"),
       wrongClick("t3"),
-      toolUse("t4", "done", { summary: "Recovered after help." }),
+      toolUse("t4", "checkpoint", { description: 'The "Sign On" button is showing' }),
+      toolUse("t5", "done", { summary: "Recovered after help." }),
     ]);
 
     const [result] = await Promise.all([
@@ -352,7 +354,7 @@ describe("discovery hands the live session to a person", () => {
 
     expect(result.status).toBe("succeeded");
     expect(result.interventions?.[0]?.reasonKind).toBe("agent_stuck");
-    expect(requests).toHaveLength(4);
+    expect(requests).toHaveLength(5);
     expect(JSON.stringify(requests[3])).toContain("refreshed the screen");
   });
 

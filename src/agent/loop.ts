@@ -20,6 +20,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 
+import { deriveSuccessCheckpoint } from "../compiler/success.js";
 import type { EvidenceBus } from "../evidence/bus.js";
 import {
   type EscalationHandler,
@@ -31,6 +32,7 @@ import {
 } from "../escalation/types.js";
 import {
   candidateStrategies,
+  detectorHolds,
   locatorEvidence,
   type LocatorEvidence,
   resolveTarget,
@@ -109,6 +111,15 @@ export interface DiscoveryOptions {
   readonly surface: Surface;
   readonly policy: PolicyEngine;
   readonly evidence: EvidenceBus;
+  /**
+   * Literal secrets the run involves, such as the password the goal tells the
+   * agent to sign on with. Registered with the redactor before the first event
+   * is written, so none of them can reach the evidence log. A credential that
+   * is not declared here is still scrubbed once the agent types it into a
+   * password field, and the event log is rewritten at the end of the run, but
+   * until then it has been on disk.
+   */
+  readonly secrets?: readonly string[];
   readonly maxSteps?: number;
   readonly maxMs?: number;
   readonly model?: string;
@@ -171,6 +182,7 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
     surface,
     policy,
     evidence,
+    secrets = [],
     maxSteps = 30,
     maxMs = 5 * 60_000,
     model = process.env["ANTHROPIC_MODEL"] ?? "claude-opus-5",
@@ -188,6 +200,10 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
   const checkpoints: { afterStep: number; description: string; verifiedText: string | null }[] = [];
   const outputs: Record<string, string> = {};
   const interventions: InterventionRecord[] = [];
+
+  // Before anything is written. The goal usually carries the sign-on
+  // credential, and the very first event records the goal.
+  for (const secret of secrets) redactor.registerSecret(secret);
 
   evidence.emit("run.start", `Discovery run started`, {
     goal,
@@ -405,8 +421,32 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
       // --- Terminal and annotation tools -----------------------------------
 
       if (name === "done") {
+        // The model's word is not the evidence. Success is accepted only if the
+        // condition the compiler will write into the artifact, the one replay
+        // asserts, holds on the screen right now. A premature or mistaken
+        // "done" is sent back instead of being recorded as a working flow.
+        const success = deriveSuccessCheckpoint({ trace, checkpoints });
+        const verified = !success.weak && detectorHolds(success.detector, observation);
+        if (!verified) {
+          evidence.emit("checkpoint", "Success claim not accepted", {
+            claimed: String(input["summary"]),
+            condition: success.description,
+            weak: success.weak,
+          });
+          failed(
+            use.id,
+            success.weak
+              ? "Not accepted: nothing on screen has been verified as proof that the goal was reached. Read the " +
+                  "value the goal asks for, or record a checkpoint quoting exact visible text that proves it (a " +
+                  "heading, column header or button label), then call done again."
+              : `Not accepted: the success condition does not hold on the current screen. ${success.description} ` +
+                  "Continue toward the goal, or escalate.",
+          );
+          continue;
+        }
         status = "succeeded";
         summary = String(input["summary"]);
+        evidence.emit("checkpoint", `Success verified: ${success.description}`, { detector: success.detector });
         evidence.emit("run.end", `Model reported success`, { summary });
         toolResults.push({ type: "tool_result", tool_use_id: use.id, content: "Recorded." });
         finished = true;
@@ -694,6 +734,10 @@ export async function runDiscovery(options: DiscoveryOptions): Promise<Discovery
     usage: accountant.totals,
     costUsd: Number(accountant.costUsd.toFixed(5)),
   });
+  // Backstop for a credential nobody declared: it is registered only once the
+  // agent types it into a password field, after earlier events were written.
+  // Rewriting the log with every secret now known removes it from the record.
+  evidence.rescrub();
   evidence.writeResult(result);
   return result;
 }

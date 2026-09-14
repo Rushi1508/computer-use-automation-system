@@ -66,6 +66,16 @@ export class PolicyEngine {
       );
     }
 
+    if (context.mode === "replay" && context.declaredRisk === "safe_reversible") {
+      // The artifact calls this step reversible; the control on screen reads as
+      // irreversible. That disagreement is a vocabulary false positive or an
+      // edited artifact, and only a person can tell which.
+      return confirm(
+        "risky-irreversible-undeclared",
+        `'${label}' looks irreversible, but the capability declares this step reversible. A person should decide before it runs.`,
+      );
+    }
+
     return confirm(
       "risky-irreversible",
       `'${label}' looks irreversible. A person should decide before it runs.`,
@@ -106,14 +116,19 @@ export class PolicyEngine {
   /**
    * Classifies an action's reversibility.
    *
-   * On replay the artifact's declared class wins, because a human reviewed it.
-   * Inference is good enough to decide whether to interrupt an exploring agent;
-   * it is not good enough to decide whether an unattended production run may
-   * move money.
+   * On replay the artifact's declared class and the policy's own reading of the
+   * live control are combined, and the more cautious one wins. The artifact can
+   * add caution the vocabulary cannot see: a control whose label has no
+   * recognised verb, marked irreversible by a reviewer. It can never remove
+   * caution the live screen shows. An artifact is a file, and a step whose risk
+   * had been edited down would otherwise let an irreversible click run
+   * unattended. What counts as irreversible is the policy's call, so a false
+   * positive is corrected in the policy vocabulary, not by a step claiming to be
+   * safe.
    */
   riskOf(action: Action, context: PolicyContext, target?: ObservedElement): RiskClass {
-    if (context.mode === "replay" && context.declaredRisk !== undefined) {
-      return context.declaredRisk;
+    if (context.mode === "replay" && context.declaredRisk === "risky_irreversible") {
+      return "risky_irreversible";
     }
     return this.inferRisk(action, target);
   }
@@ -128,8 +143,8 @@ export class PolicyEngine {
    *
    * Known limitation: a control whose label does not contain a recognised verb
    * is classified safe. That is a false negative by construction, which is why
-   * the artifact carries a reviewable per-step risk class rather than relying
-   * on this at replay time.
+   * the artifact carries a reviewable per-step risk class that can raise this
+   * classification on replay. It cannot lower it.
    */
   inferRisk(action: Action, target?: ObservedElement): RiskClass {
     if (action.kind !== "click") return "safe_reversible";

@@ -12,7 +12,7 @@
  * a request field.
  */
 
-import express, { type Request, type Response } from "express";
+import express, { type NextFunction, type Request, type Response } from "express";
 import { z } from "zod";
 
 import type { Action, Observation } from "../perception/types.js";
@@ -89,6 +89,10 @@ function idOf(req: Request): string {
 
 type Handler = (req: Request, res: Response) => Promise<unknown>;
 
+function reportInternal(error: unknown): void {
+  process.stderr.write(`operator console: ${redactor.redactText(error instanceof Error ? error.message : String(error))}\n`);
+}
+
 /** Every response body is redacted on the way out, the same boundary rule the evidence bus follows. */
 function json(handler: Handler) {
   return async (req: Request, res: Response): Promise<void> => {
@@ -104,7 +108,19 @@ function json(handler: Handler) {
             : error instanceof z.ZodError
               ? 400
               : 500;
-      const message = error instanceof z.ZodError ? error.issues.map((i) => i.message).join("; ") : error instanceof Error ? error.message : String(error);
+      // Only errors raised on purpose carry their message to the client.
+      // Anything else is an internal failure whose text may name files or
+      // internals, so the client gets a fixed sentence and the detail stays on
+      // the server's own output.
+      const message =
+        error instanceof z.ZodError
+          ? error.issues.map((i) => i.message).join("; ")
+          : status === 500
+            ? "internal error in the operator console"
+            : error instanceof Error
+              ? error.message
+              : String(error);
+      if (status === 500) reportInternal(error);
       res.status(status).json({ error: redactor.redactText(message) });
     }
   };
@@ -173,6 +189,31 @@ export function createOperatorApp(desk: HandoffDesk, lease: SessionLease): expre
       return desk.resolve(idOf(req), operatorOf(req), resolution, note);
     }),
   );
+
+  // Anything that did not match a route gets a JSON 404, not Express's HTML page.
+  app.use((_req: Request, res: Response) => {
+    res.status(404).json({ error: "no such endpoint" });
+  });
+
+  // Errors raised before a handler runs, such as a malformed or oversized JSON
+  // body, would otherwise reach Express's default handler, which answers with an
+  // HTML page containing the stack trace and absolute file paths. The console is
+  // an API: it answers in JSON and says only what the caller got wrong.
+  app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
+    const failure = error as { status?: unknown; type?: unknown };
+    const status =
+      typeof failure.status === "number" && failure.status >= 400 && failure.status < 500 ? failure.status : 500;
+    const message =
+      failure.type === "entity.parse.failed"
+        ? "request body is not valid JSON"
+        : failure.type === "entity.too.large"
+          ? "request body is too large"
+          : status < 500
+            ? "malformed request"
+            : "internal error in the operator console";
+    if (status === 500) reportInternal(error);
+    res.status(status).json({ error: message });
+  });
 
   return app;
 }

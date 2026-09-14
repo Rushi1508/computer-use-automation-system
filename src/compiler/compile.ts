@@ -36,11 +36,11 @@ import {
   type CapabilityInput,
   type CapabilityOutput,
   CapabilitySchema,
-  type Detector,
   type Step,
   type ValueRef,
 } from "../schema/capability.js";
 import { deriveTarget } from "./strategies.js";
+import { deriveSuccessCheckpoint } from "./success.js";
 
 export interface CompileOptions {
   readonly id: string;
@@ -164,72 +164,6 @@ function scrubSecrets<T>(value: T, secretLiterals: readonly string[]): T {
     return node;
   };
   return walk(value) as T;
-}
-
-interface DerivedCheckpoint {
-  readonly description: string;
-  readonly detector: Detector;
-  /** True when the detector is a guess a reviewer should tighten before approving. */
-  readonly weak: boolean;
-}
-
-/**
- * Derives the condition that proves the goal was reached.
- *
- * Prefers structural text that is the same for every invocation: the column
- * header of the grid a value was read from, then a label verified on screen at
- * record time. A title or anchor is a last resort and flagged as weak — a
- * detector on "Member 12345" would pass for one input and fail for all others.
- */
-function deriveSuccessCheckpoint(result: DiscoveryResult): DerivedCheckpoint {
-  for (let i = result.trace.length - 1; i >= 0; i--) {
-    const step = result.trace[i];
-    const grid = step?.target?.grid;
-    if (step?.action.kind === "read" && grid !== undefined) {
-      return {
-        description: `The screen shows a grid with a "${grid.columnHeader}" column, where the returned value is read from.`,
-        detector: { kind: "text_present", text: grid.columnHeader },
-        weak: false,
-      };
-    }
-  }
-
-  for (let i = result.checkpoints.length - 1; i >= 0; i--) {
-    const text = result.checkpoints[i]?.verifiedText ?? null;
-    if (text !== null) {
-      return {
-        description: `The screen shows "${text}", as verified when the flow was recorded.`,
-        detector: { kind: "text_present", text },
-        weak: false,
-      };
-    }
-  }
-
-  const title = result.trace.at(-1)?.titleBefore ?? "";
-  if (title !== "" && !/\d{3,}/.test(title)) {
-    return {
-      description: `The final screen is titled "${title}".`,
-      detector: { kind: "title_equals", value: title },
-      weak: true,
-    };
-  }
-
-  for (let i = result.trace.length - 1; i >= 0; i--) {
-    const anchor = result.trace[i]?.target?.anchorText ?? null;
-    if (anchor !== null && anchor !== "" && !/\d{3,}/.test(anchor)) {
-      return {
-        description: `The screen showing "${anchor}" was reached.`,
-        detector: { kind: "text_present", text: anchor },
-        weak: true,
-      };
-    }
-  }
-
-  return {
-    description: "The flow completed without the application's error page.",
-    detector: { kind: "text_absent", text: "Unexpected error" },
-    weak: true,
-  };
 }
 
 /**

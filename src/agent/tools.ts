@@ -75,7 +75,9 @@ const DESCRIPTIONS: Record<ToolName, string> = {
     "Record that an expected state was reached. Quote, in double quotes, the exact visible text that proves it. " +
     "Prefer a heading, column header or button label over a data value, because the check is replayed later " +
     "with different inputs. Call this after a step whose success is not obvious from the next action.",
-  done: "The goal is achieved. Call this last.",
+  done:
+    "The goal is achieved. Call this last. It is accepted only once the proof is on screen: a value you read, " +
+    "or a checkpoint you recorded quoting visible text. Record one of those first.",
   escalate:
     "You cannot safely proceed — blocked, ambiguous, or the surface is not what you expected. " +
     "A human operator will be asked to take over. Prefer this over guessing.",

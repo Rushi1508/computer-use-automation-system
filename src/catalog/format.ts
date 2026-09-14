@@ -11,6 +11,7 @@
  */
 
 import { appProfile } from "../schema/app-profile.js";
+import { capabilityDigest } from "../schema/approval.js";
 import { invocationSchema, type Capability, type Detector } from "../schema/capability.js";
 import {
   heldSteps,
@@ -134,7 +135,8 @@ export function formatCapabilityDescription(entry: CatalogEntry, selected: Versi
   const lines: string[] = [
     `${capability.id} v${capability.version} — ${capability.name}`,
     `  file:      ${selected.file}`,
-    `  state:     ${capability.approvalState}`,
+    `  state:     ${capability.approvalState}${capability.approvalState === "approved" ? " (approval record matches)" : ""}`,
+    `  digest:    ${capabilityDigest(capability)}`,
     `  surface:   ${capability.surface.kind} at ${capability.surface.entrypoint}`,
   ];
 

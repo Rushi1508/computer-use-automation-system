@@ -199,9 +199,10 @@ export const StepSchema = z.object({
   outputName: z.string().optional(),
   url: z.string().optional(),
   /**
-   * Reviewed reversibility. Inference decides whether to interrupt an exploring
-   * agent; this decides whether an unattended production run may proceed, so it
-   * is a reviewable field on the artifact rather than a runtime guess.
+   * Reviewed reversibility. It can only add caution: replay treats a step as
+   * irreversible if this says so or if the policy reads the live control as
+   * irreversible, so a step edited down to safe_reversible still stops for a
+   * person.
    */
   risk: z.enum(["safe_reversible", "risky_irreversible"]),
   waitMs: z.number().int().nonnegative().default(0),
@@ -291,6 +292,12 @@ export const CapabilitySchema = z.object({
    * Draft capabilities re-prompt on risky steps; approved ones do not. Gating
    * unattended execution on an explicit review state keeps a freshly-recorded
    * flow from moving money on its first invocation.
+   *
+   * Not taken on trust from the file. The loader (schema/load.ts) sets it to
+   * approved only when a detached approval record's digest matches this
+   * artifact (schema/approval.ts), so an artifact cannot approve itself and an
+   * edited one loses its approval. Compiled and revised artifacts are always
+   * written as draft.
    */
   approvalState: z.enum(["draft", "approved"]).default("draft"),
 

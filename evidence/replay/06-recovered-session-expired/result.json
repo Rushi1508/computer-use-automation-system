@@ -4,17 +4,17 @@
     "savingsBalance": "$14,820.37"
   },
   "capabilityId": "lookup_member_savings_balance",
-  "capabilityVersion": 3,
+  "capabilityVersion": 2,
   "runId": "06-recovered-session-expired",
-  "entrypoint": "http://127.0.0.1:60982/",
-  "startedAt": "2026-09-13T01:08:33.130Z",
-  "elapsedMs": 3268,
+  "entrypoint": "http://127.0.0.1:57029/",
+  "startedAt": "2026-09-14T22:12:17.116Z",
+  "elapsedMs": 6762,
   "steps": [
     {
       "index": 0,
       "action": "fill",
-      "intent": "Enter operator ID to sign on",
-      "durationMs": 110,
+      "intent": "Enter the operator ID to sign on",
+      "durationMs": 221,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -27,8 +27,8 @@
     {
       "index": 1,
       "action": "fill",
-      "intent": "Enter password to sign on",
-      "durationMs": 68,
+      "intent": "Enter the password to sign on",
+      "durationMs": 173,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -42,7 +42,7 @@
       "index": 2,
       "action": "click",
       "intent": "Submit credentials to sign on",
-      "durationMs": 479,
+      "durationMs": 691,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -56,7 +56,7 @@
       "index": 3,
       "action": "fill",
       "intent": "Enter member ID to look up",
-      "durationMs": 100,
+      "durationMs": 271,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -69,8 +69,8 @@
     {
       "index": 4,
       "action": "click",
-      "intent": "Search for member {memberId}",
-      "durationMs": 412,
+      "intent": "Run the member search",
+      "durationMs": 768,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -83,8 +83,8 @@
     {
       "index": 0,
       "action": "fill",
-      "intent": "Enter operator ID to sign on",
-      "durationMs": 110,
+      "intent": "Enter the operator ID to sign on",
+      "durationMs": 337,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -97,8 +97,8 @@
     {
       "index": 1,
       "action": "fill",
-      "intent": "Enter password to sign on",
-      "durationMs": 64,
+      "intent": "Enter the password to sign on",
+      "durationMs": 224,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -112,7 +112,7 @@
       "index": 2,
       "action": "click",
       "intent": "Submit credentials to sign on",
-      "durationMs": 488,
+      "durationMs": 1011,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -126,7 +126,7 @@
       "index": 3,
       "action": "fill",
       "intent": "Enter member ID to look up",
-      "durationMs": 103,
+      "durationMs": 385,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -139,8 +139,8 @@
     {
       "index": 4,
       "action": "click",
-      "intent": "Search for member {memberId}",
-      "durationMs": 429,
+      "intent": "Run the member search",
+      "durationMs": 790,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -154,7 +154,7 @@
       "index": 5,
       "action": "read",
       "intent": "Capture the savings account balance requested by the goal",
-      "durationMs": 229,
+      "durationMs": 859,
       "polls": 0,
       "resolvedBy": {
         "kind": "grid_cell",

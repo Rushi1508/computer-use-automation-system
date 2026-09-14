@@ -332,6 +332,13 @@ class ReplayRun {
   async run(): Promise<ReplayResult> {
     const { capability, inputs, evidence } = this.#c;
 
+    // Registered before anything is written, so no event, not even this run's
+    // first, can carry a secret input in the clear.
+    for (const input of capability.inputs) {
+      const value = inputs[input.name];
+      if (input.sensitivity === "secret" && value !== undefined) redactor.registerSecret(value);
+    }
+
     evidence.emit("run.start", `Replay of ${capability.id} v${capability.version}`, {
       entrypoint: this.#c.entrypoint,
       approvalState: capability.approvalState,
@@ -357,11 +364,6 @@ class ReplayRun {
           evidence: {},
         },
       });
-    }
-
-    for (const input of capability.inputs) {
-      const value = inputs[input.name];
-      if (input.sensitivity === "secret" && value !== undefined) redactor.registerSecret(value);
     }
 
     try {
@@ -465,11 +467,17 @@ class ReplayRun {
     let located = await this.#locate(step, target);
     let action = this.#action(step, located.element);
 
-    const decision = policy.check(
-      action,
-      { mode: "replay", declaredRisk: step.risk, capabilityApproved: capability.approvalState === "approved" },
-      located.element,
-    );
+    const context = {
+      mode: "replay",
+      declaredRisk: step.risk,
+      capabilityApproved: capability.approvalState === "approved",
+    } as const;
+    const decision = policy.check(action, context, located.element);
+    // The effective class, not the declared one, decides whether a failed
+    // action may be retried and whether re-authentication is still safe. A step
+    // declared reversible whose control reads as irreversible is treated as
+    // irreversible throughout.
+    const risk = policy.riskOf(action, context, located.element);
     evidence.emit("policy.decision", `${step.action}: ${decision.verdict}`, { rule: decision.rule, reason: decision.reason });
 
     if (decision.verdict === "deny") {
@@ -490,7 +498,7 @@ class ReplayRun {
     // Re-locate and retry once — but only for a reversible step. An
     // irreversible action that reported failure may still have taken effect,
     // and repeating it is the one mistake replay must never make.
-    if (!result.ok && step.risk === "safe_reversible") {
+    if (!result.ok && risk === "safe_reversible") {
       evidence.emit("recovery", `Step ${step.index}: action failed, re-locating once`, { error: result.error });
       located = await this.#locate(step, target);
       action = this.#action(step, located.element);
@@ -499,7 +507,7 @@ class ReplayRun {
     if (!result.ok) {
       throw await this.#fail("action_failed", step, `${step.action} on ${target.description} to succeed`, true, result.error ?? "unknown error");
     }
-    if (step.risk === "risky_irreversible") this.#riskyExecuted = true;
+    if (risk === "risky_irreversible") this.#riskyExecuted = true;
 
     // A click can land somewhere the allowlist forbids.
     const after = await surface.observe();

@@ -8,10 +8,10 @@
   "reason": {
     "kind": "replay_failure",
     "code": "application_error",
-    "detail": "application_error: The application returned its generic error page. Waiting will not change that, so replay stops immediately with evidence instead of running out its timeout. | title \"MERIDIAN CORE\" at http://127.0.0.1:65342/ showing: (top) (no document body; content is in child frames) navmenu text: Navigation link \"Member Search\": /url: /content link \"Account Servicing\": /url: /content link \"Sign Off\": /url: /logout main table: rowgroup: row \"MERIDIAN CORE — Member Servicing\": cell \"MERIDIAN CORE — Member Servicing\" row \"Application Error\": cell \"Application Error\" paragraph: Unexpected error processing your request. paragrap…"
+    "detail": "application_error: The application returned its generic error page. Waiting will not change that, so replay stops immediately with evidence instead of running out its timeout. | title \"MERIDIAN CORE\" at http://127.0.0.1:63220/ showing: (top) (no document body; content is in child frames) navmenu text: Navigation link \"Member Search\": /url: /content link \"Account Servicing\": /url: /content link \"Sign Off\": /url: /logout main table: rowgroup: row \"MERIDIAN CORE — Member Servicing\": cell \"MERIDIAN CORE — Member Servicing\" row \"Application Error\": cell \"Application Error\" paragraph: Unexpected error processing your request. paragrap…"
   },
   "expected": "the application to respond normally",
-  "observed": "title \"MERIDIAN CORE\" at http://127.0.0.1:65342/ showing: (top) (no document body; content is in child frames) navmenu text: Navigation link \"Member Search\": /url: /content link \"Account Servicing\": /url: /content link \"Sign Off\": /url: /logout main table: rowgroup: row \"MERIDIAN CORE — Member Servicing\": cell \"MERIDIAN CORE — Member Servicing\" row \"Application Error\": cell \"Application Error\" paragraph: Unexpected error processing your request. paragrap…",
+  "observed": "title \"MERIDIAN CORE\" at http://127.0.0.1:63220/ showing: (top) (no document body; content is in child frames) navmenu text: Navigation link \"Member Search\": /url: /content link \"Account Servicing\": /url: /content link \"Sign Off\": /url: /logout main table: rowgroup: row \"MERIDIAN CORE — Member Servicing\": cell \"MERIDIAN CORE — Member Servicing\" row \"Application Error\": cell \"Application Error\" paragraph: Unexpected error processing your request. paragrap…",
   "allowed": [
     "resume",
     "completed_manually",
@@ -19,10 +19,10 @@
   ],
   "id": "int-001",
   "status": "resolved",
-  "createdAt": "2026-09-13T01:09:01.079Z",
-  "claimedAt": "2026-09-13T01:09:01.210Z",
+  "createdAt": "2026-09-14T22:12:54.397Z",
+  "claimedAt": "2026-09-14T22:12:54.792Z",
   "claimedBy": "operator-sam",
-  "resolvedAt": "2026-09-13T01:09:02.467Z",
+  "resolvedAt": "2026-09-14T22:12:56.418Z",
   "resolution": {
     "kind": "resume"
   },
@@ -33,7 +33,7 @@
   ],
   "actions": [
     {
-      "at": "2026-09-13T01:09:01.646Z",
+      "at": "2026-09-14T22:12:55.373Z",
       "operator": "operator-sam",
       "action": {
         "kind": "click",
@@ -82,10 +82,10 @@
         "reason": "Action is reversible and read-only in effect."
       },
       "ok": true,
-      "urlAfter": "http://127.0.0.1:65342/"
+      "urlAfter": "http://127.0.0.1:63220/"
     },
     {
-      "at": "2026-09-13T01:09:01.778Z",
+      "at": "2026-09-14T22:12:55.569Z",
       "operator": "operator-sam",
       "action": {
         "kind": "fill",
@@ -149,10 +149,10 @@
         "reason": "Action is reversible and read-only in effect."
       },
       "ok": true,
-      "urlAfter": "http://127.0.0.1:65342/"
+      "urlAfter": "http://127.0.0.1:63220/"
     },
     {
-      "at": "2026-09-13T01:09:02.233Z",
+      "at": "2026-09-14T22:12:56.141Z",
       "operator": "operator-sam",
       "action": {
         "kind": "click",
@@ -201,42 +201,42 @@
         "reason": "Action is reversible and read-only in effect."
       },
       "ok": true,
-      "urlAfter": "http://127.0.0.1:65342/"
+      "urlAfter": "http://127.0.0.1:63220/"
     }
   ],
   "navigations": [
     {
-      "at": "2026-09-13T01:09:01.310Z",
-      "url": "http://127.0.0.1:65342/content"
+      "at": "2026-09-14T22:12:54.994Z",
+      "url": "http://127.0.0.1:63220/content"
     },
     {
-      "at": "2026-09-13T01:09:01.925Z",
-      "url": "http://127.0.0.1:65342/members/search"
+      "at": "2026-09-14T22:12:55.759Z",
+      "url": "http://127.0.0.1:63220/members/search"
     }
   ],
   "stateBefore": {
-    "at": "2026-09-13T01:09:01.122Z",
-    "url": "http://127.0.0.1:65342/",
+    "at": "2026-09-14T22:12:54.696Z",
+    "url": "http://127.0.0.1:63220/",
     "title": "MERIDIAN CORE",
     "fields": []
   },
   "stateAfter": {
-    "at": "2026-09-13T01:09:02.429Z",
-    "url": "http://127.0.0.1:65342/",
+    "at": "2026-09-14T22:12:56.383Z",
+    "url": "http://127.0.0.1:63220/",
     "title": "MERIDIAN CORE",
     "fields": []
   },
   "lease": [
     {
-      "at": "2026-09-13T01:09:01.149Z",
+      "at": "2026-09-14T22:12:54.752Z",
       "from": "automation",
       "to": "pending_human",
       "holder": null,
       "generation": 0,
-      "reason": "application_error: application_error: The application returned its generic error page. Waiting will not change that, so replay stops immediately with evidence instead of running out its timeout. | title \"MERIDIAN CORE\" at http://127.0.0.1:65342/ showing: (top) (no document body; content is in child "
+      "reason": "application_error: application_error: The application returned its generic error page. Waiting will not change that, so replay stops immediately with evidence instead of running out its timeout. | title \"MERIDIAN CORE\" at http://127.0.0.1:63220/ showing: (top) (no document body; content is in child "
     },
     {
-      "at": "2026-09-13T01:09:01.210Z",
+      "at": "2026-09-14T22:12:54.791Z",
       "from": "pending_human",
       "to": "human",
       "holder": {
@@ -247,7 +247,7 @@
       "reason": "operator-sam claimed int-001"
     },
     {
-      "at": "2026-09-13T01:09:02.467Z",
+      "at": "2026-09-14T22:12:56.418Z",
       "from": "human",
       "to": "resuming",
       "holder": null,
@@ -255,7 +255,7 @@
       "reason": "operator-sam resolved int-001: resume"
     },
     {
-      "at": "2026-09-13T01:09:02.469Z",
+      "at": "2026-09-14T22:12:56.420Z",
       "from": "resuming",
       "to": "automation",
       "holder": {

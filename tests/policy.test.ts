@@ -127,6 +127,30 @@ describe("risk classification", () => {
     );
     expect(d.verdict).toBe("confirm");
   });
+
+  it("does not let an artifact declare an irreversible control reversible", () => {
+    // The tamper case: a step's risk edited down in the file. The live control
+    // still reads as irreversible, and that wins.
+    const context = { mode: "replay", declaredRisk: "safe_reversible", capabilityApproved: false } as const;
+    const d = engine.check({ kind: "click", nodeId: 1 }, context, element({ name: "Open Account" }));
+    expect(d.verdict).toBe("confirm");
+    expect(d.rule).toBe("risky-irreversible-undeclared");
+    expect(engine.riskOf({ kind: "click", nodeId: 1 }, context, element({ name: "Open Account" }))).toBe("risky_irreversible");
+  });
+
+  it("still honours a reversible step whose control reads as benign", () => {
+    const d = engine.check(
+      { kind: "click", nodeId: 1 },
+      { mode: "replay", declaredRisk: "safe_reversible", capabilityApproved: false },
+      element({ name: "Search" }),
+    );
+    expect(d.verdict).toBe("allow");
+  });
+
+  it("treats the demo's form-opening Open Sub-Account button as reversible, and Open Account as not", () => {
+    expect(engine.check({ kind: "click", nodeId: 1 }, DISCOVERY, element({ name: "Open Sub-Account" })).verdict).toBe("allow");
+    expect(engine.check({ kind: "click", nodeId: 1 }, DISCOVERY, element({ name: "Open Account" })).verdict).toBe("confirm");
+  });
 });
 
 describe("secret capture is automatic, not caller-dependent", () => {

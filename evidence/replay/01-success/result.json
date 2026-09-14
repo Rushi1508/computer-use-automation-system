@@ -4,17 +4,17 @@
     "savingsBalance": "$14,820.37"
   },
   "capabilityId": "lookup_member_savings_balance",
-  "capabilityVersion": 3,
+  "capabilityVersion": 2,
   "runId": "01-success",
-  "entrypoint": "http://127.0.0.1:60982/",
-  "startedAt": "2026-09-13T01:08:23.125Z",
-  "elapsedMs": 1978,
+  "entrypoint": "http://127.0.0.1:57029/",
+  "startedAt": "2026-09-14T22:11:59.580Z",
+  "elapsedMs": 3649,
   "steps": [
     {
       "index": 0,
       "action": "fill",
-      "intent": "Enter operator ID to sign on",
-      "durationMs": 149,
+      "intent": "Enter the operator ID to sign on",
+      "durationMs": 216,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -27,8 +27,8 @@
     {
       "index": 1,
       "action": "fill",
-      "intent": "Enter password to sign on",
-      "durationMs": 100,
+      "intent": "Enter the password to sign on",
+      "durationMs": 98,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -42,7 +42,7 @@
       "index": 2,
       "action": "click",
       "intent": "Submit credentials to sign on",
-      "durationMs": 518,
+      "durationMs": 810,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -56,7 +56,7 @@
       "index": 3,
       "action": "fill",
       "intent": "Enter member ID to look up",
-      "durationMs": 102,
+      "durationMs": 363,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -69,8 +69,8 @@
     {
       "index": 4,
       "action": "click",
-      "intent": "Search for member {memberId}",
-      "durationMs": 473,
+      "intent": "Run the member search",
+      "durationMs": 836,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -84,7 +84,7 @@
       "index": 5,
       "action": "read",
       "intent": "Capture the savings account balance requested by the goal",
-      "durationMs": 260,
+      "durationMs": 771,
       "polls": 0,
       "resolvedBy": {
         "kind": "grid_cell",

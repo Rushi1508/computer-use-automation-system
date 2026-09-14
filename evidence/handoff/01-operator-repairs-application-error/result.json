@@ -4,17 +4,17 @@
     "savingsBalance": "$14,820.37"
   },
   "capabilityId": "lookup_member_savings_balance",
-  "capabilityVersion": 3,
+  "capabilityVersion": 2,
   "runId": "01-operator-repairs-application-error",
-  "entrypoint": "http://127.0.0.1:65342/",
-  "startedAt": "2026-09-13T01:08:59.400Z",
-  "elapsedMs": 3384,
+  "entrypoint": "http://127.0.0.1:63220/",
+  "startedAt": "2026-09-14T22:12:50.872Z",
+  "elapsedMs": 5990,
   "steps": [
     {
       "index": 0,
       "action": "fill",
-      "intent": "Enter operator ID to sign on",
-      "durationMs": 137,
+      "intent": "Enter the operator ID to sign on",
+      "durationMs": 276,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -27,8 +27,8 @@
     {
       "index": 1,
       "action": "fill",
-      "intent": "Enter password to sign on",
-      "durationMs": 76,
+      "intent": "Enter the password to sign on",
+      "durationMs": 143,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -42,7 +42,7 @@
       "index": 2,
       "action": "click",
       "intent": "Submit credentials to sign on",
-      "durationMs": 495,
+      "durationMs": 802,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -56,7 +56,7 @@
       "index": 3,
       "action": "fill",
       "intent": "Enter member ID to look up",
-      "durationMs": 104,
+      "durationMs": 350,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -69,8 +69,8 @@
     {
       "index": 4,
       "action": "click",
-      "intent": "Search for member {memberId}",
-      "durationMs": 437,
+      "intent": "Run the member search",
+      "durationMs": 713,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -84,7 +84,7 @@
       "index": 5,
       "action": "read",
       "intent": "Capture the savings account balance requested by the goal",
-      "durationMs": 236,
+      "durationMs": 342,
       "polls": 0,
       "resolvedBy": {
         "kind": "grid_cell",
@@ -107,7 +107,7 @@
       "resolution": "resume",
       "note": "Search returned the application error page. Went back to Member Search and re-ran the lookup; member detail is showing.",
       "operatorActions": 3,
-      "pausedMs": 1391
+      "pausedMs": 2025
     }
   ]
 }
