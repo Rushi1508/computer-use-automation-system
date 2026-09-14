@@ -17,7 +17,7 @@
       - cell "MERIDIAN CORE — Member Servicing"
     - row "Open Sub-Account - 12345":
       - cell "Open Sub-Account - 12345"
-- paragraph: Opening a new sub-account for Dolores Abernathy (12345).
+- paragraph: Opening a new sub-account for [member name] (12345).
 - table:
   - rowgroup:
     - row "Account Type Certificate":

@@ -9,15 +9,15 @@
   "capabilityId": "lookup_member_savings_balance",
   "capabilityVersion": 2,
   "runId": "13-outcome-sign-on-failed",
-  "entrypoint": "http://127.0.0.1:57029/",
-  "startedAt": "2026-09-14T22:12:45.404Z",
-  "elapsedMs": 1402,
+  "entrypoint": "http://127.0.0.1:61171/",
+  "startedAt": "2026-09-14T23:29:22.155Z",
+  "elapsedMs": 961,
   "steps": [
     {
       "index": 0,
       "action": "fill",
       "intent": "Enter the operator ID to sign on",
-      "durationMs": 295,
+      "durationMs": 143,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -31,7 +31,7 @@
       "index": 1,
       "action": "fill",
       "intent": "Enter the password to sign on",
-      "durationMs": 183,
+      "durationMs": 92,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -45,7 +45,7 @@
       "index": 2,
       "action": "click",
       "intent": "Submit credentials to sign on",
-      "durationMs": 562,
+      "durationMs": 403,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",

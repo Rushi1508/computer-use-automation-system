@@ -374,6 +374,7 @@ export class PlaywrightWebSurface implements Surface {
     private readonly browser: Browser,
     private readonly page: Page,
     private readonly settleMs = 250,
+    private readonly mask: ScreenshotMask | null = null,
   ) {}
 
   async observe(): Promise<Observation> {
@@ -570,7 +571,13 @@ export class PlaywrightWebSurface implements Surface {
   }
 
   async screenshot(): Promise<Buffer> {
-    return this.page.screenshot({ fullPage: true });
+    const mask = this.mask;
+    if (mask === null) return this.page.screenshot({ fullPage: true });
+    const locators = this.page.frames().flatMap((frame) => [
+      ...mask.texts.map((text) => frame.getByText(text)),
+      ...mask.patterns.map((pattern) => frame.getByText(pattern)),
+    ]);
+    return this.page.screenshot({ fullPage: true, mask: locators, maskColor: "#000000" });
   }
 
   async close(): Promise<void> {
@@ -625,11 +632,24 @@ export class PlaywrightWebSurface implements Surface {
   }
 }
 
+/** Text and patterns to black out in screenshots, in every frame. */
+export interface ScreenshotMask {
+  readonly texts: readonly string[];
+  readonly patterns: readonly RegExp[];
+}
+
 export interface LaunchOptions {
   readonly headed?: boolean;
   readonly settleMs?: number;
   /** Start URL. Omitted leaves the browser on about:blank until a navigate action. */
   readonly startUrl?: string;
+  /**
+   * Off unless set. The evidence scripts set it, so committed screenshots do
+   * not show the demo's customer names or account numbers. The CLI and the
+   * operator console never do: a person deciding on an account needs to see
+   * whose it is.
+   */
+  readonly screenshotMask?: ScreenshotMask;
 }
 
 /**
@@ -645,5 +665,5 @@ export async function launchWebSurface(options: LaunchOptions = {}): Promise<Pla
   if (options.startUrl !== undefined) {
     await page.goto(options.startUrl);
   }
-  return new PlaywrightWebSurface(browser, page, options.settleMs ?? 250);
+  return new PlaywrightWebSurface(browser, page, options.settleMs ?? 250, options.screenshotMask ?? null);
 }

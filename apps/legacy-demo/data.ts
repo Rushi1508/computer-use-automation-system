@@ -88,6 +88,15 @@ const MEMBERS: readonly Member[] = [
 
 const BY_ID = new Map(MEMBERS.map((m) => [m.id, m]));
 
+/**
+ * The dataset's identifying values: names and branches. Used to redact the
+ * committed evidence, so its logs and screenshots do not read like a customer
+ * record.
+ */
+export function customerIdentifiers(): { readonly names: readonly string[]; readonly branches: readonly string[] } {
+  return { names: MEMBERS.map((m) => m.name), branches: [...new Set(MEMBERS.map((m) => m.branch))] };
+}
+
 export function findMember(id: string): Member | undefined {
   return BY_ID.get(id.trim());
 }

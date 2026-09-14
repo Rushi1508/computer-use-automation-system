@@ -9,15 +9,15 @@
   "capabilityId": "lookup_member_savings_balance",
   "capabilityVersion": 2,
   "runId": "04-outcome-malformed-member-id",
-  "entrypoint": "http://127.0.0.1:57029/",
-  "startedAt": "2026-09-14T22:12:09.679Z",
-  "elapsedMs": 2554,
+  "entrypoint": "http://127.0.0.1:61171/",
+  "startedAt": "2026-09-14T23:29:00.154Z",
+  "elapsedMs": 1551,
   "steps": [
     {
       "index": 0,
       "action": "fill",
       "intent": "Enter the operator ID to sign on",
-      "durationMs": 245,
+      "durationMs": 125,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -31,7 +31,7 @@
       "index": 1,
       "action": "fill",
       "intent": "Enter the password to sign on",
-      "durationMs": 166,
+      "durationMs": 67,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -45,7 +45,7 @@
       "index": 2,
       "action": "click",
       "intent": "Submit credentials to sign on",
-      "durationMs": 723,
+      "durationMs": 489,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -59,7 +59,7 @@
       "index": 3,
       "action": "fill",
       "intent": "Enter member ID to look up",
-      "durationMs": 308,
+      "durationMs": 107,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",
@@ -73,7 +73,7 @@
       "index": 4,
       "action": "click",
       "intent": "Run the member search",
-      "durationMs": 667,
+      "durationMs": 428,
       "polls": 0,
       "resolvedBy": {
         "kind": "role_name",

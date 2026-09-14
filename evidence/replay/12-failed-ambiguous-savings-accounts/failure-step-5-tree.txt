@@ -19,16 +19,16 @@
       - cell "Member 12345"
 - table:
   - rowgroup:
-    - row "Member ID 12345 Name Dolores Abernathy":
+    - row "Member ID 12345 Name [member name]":
       - cell "Member ID"
       - cell "12345"
       - cell "Name"
-      - cell "Dolores Abernathy"
-    - row "Status active Branch Westworld Main":
+      - cell "[member name]"
+    - row "Status active Branch [branch]":
       - cell "Status"
       - cell "active"
       - cell "Branch"
-      - cell "Westworld Main"
+      - cell "[branch]"
     - row "Joined 2019-03-14":
       - cell "Joined"
       - cell "2019-03-14"
@@ -41,23 +41,23 @@
       - columnheader "Type"
       - columnheader "Balance"
       - columnheader "Opened"
-    - row "0001-4472 Checking $248.15 2019-03-14":
-      - cell "0001-4472"
+    - row "[account number] Checking $248.15 2019-03-14":
+      - cell "[account number]"
       - cell "Checking"
       - cell "$248.15"
       - cell "2019-03-14"
-    - row "0002-8891 Savings $14,820.37 2019-03-14":
-      - cell "0002-8891"
+    - row "[account number] Savings $14,820.37 2019-03-14":
+      - cell "[account number]"
       - cell "Savings"
       - cell "$14,820.37"
       - cell "2019-03-14"
-    - row "0004-1120 Certificate $25,000.00 2022-11-02":
-      - cell "0004-1120"
+    - row "[account number] Certificate $25,000.00 2022-11-02":
+      - cell "[account number]"
       - cell "Certificate"
       - cell "$25,000.00"
       - cell "2022-11-02"
-    - row "0009-4000 Savings $500.00 2026-09-14":
-      - cell "0009-4000"
+    - row "[account number] Savings $500.00 2026-09-14":
+      - cell "[account number]"
       - cell "Savings"
       - cell "$500.00"
       - cell "2026-09-14"

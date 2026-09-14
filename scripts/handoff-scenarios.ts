@@ -30,6 +30,7 @@ import { formatReplayResult } from "../src/replay/format.js";
 import type { Capability } from "../src/schema/capability.js";
 import { readCapabilityFile } from "../src/schema/load.js";
 import { LeasedSurface, SessionLease } from "../src/session/lease.js";
+import { redactEvidenceDir, screenshotMask } from "./evidence-redaction.js";
 
 const ROOT = join("evidence", "handoff");
 
@@ -171,7 +172,7 @@ async function main(): Promise<number> {
 
       const evidence = new EvidenceBus(scenario.id, ROOT);
       const policy = new PolicyEngine(defaultPolicyConfig(target.base));
-      const inner = await launchWebSurface({});
+      const inner = await launchWebSurface({ screenshotMask: screenshotMask() });
       const lease = new SessionLease();
       const desk = new HandoffDesk({ surface: inner, lease, policy, evidence, timeoutMs: 120_000 });
       const console = await listen(createOperatorApp(desk, lease) as unknown as ReturnType<typeof createApp>);
@@ -230,6 +231,7 @@ async function main(): Promise<number> {
       "Regenerate with `npm run handoff`. Each scenario directory holds the replay's events and result,",
       "the full intervention record (context, lease transitions, operator actions, state before and after),",
       "and screenshots of the session as it was handed over and handed back.",
+      "Customer names, branches and account numbers from the synthetic dataset are redacted: markers in text, black boxes in screenshots.",
       "",
       "`open_sub_account` is a hand-authored capability, labelled as such in its provenance, used so there is",
       "a genuinely irreversible step to decide on without spending model budget on a second recording.",
@@ -242,6 +244,7 @@ async function main(): Promise<number> {
     "utf8",
   );
 
+  redactEvidenceDir(ROOT);
   process.stdout.write(`\n${SCENARIOS.length - mismatches}/${SCENARIOS.length} handoff scenarios ended as expected.\n`);
   return mismatches === 0 ? 0 : 1;
 }

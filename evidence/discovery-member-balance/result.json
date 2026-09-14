@@ -1,6 +1,6 @@
 {
   "status": "succeeded",
-  "summary": "Signed on as op-[REDACTED], searched member 12345 (Dolores Abernathy), and read the savings account (0002-8891) balance: $14,820.37.",
+  "summary": "Signed on as op-[REDACTED], searched member 12345 ([member name]), and read the savings account ([account number]) balance: $14,820.37.",
   "goal": "Sign on with operator ID 'op-[REDACTED]' and password '[REDACTED]', then look up member 12345 and read their current savings balance.",
   "entrypoint": "http://127.0.0.1:4173/",
   "trace": [
@@ -337,7 +337,7 @@
         "grid": {
           "columnHeader": "Balance",
           "rowTexts": [
-            "0002-8891",
+            "[account number]",
             "Savings",
             "2019-03-14"
           ]

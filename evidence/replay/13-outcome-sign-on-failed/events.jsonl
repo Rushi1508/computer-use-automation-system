@@ -1,11 +1,11 @@
-{"seq":0,"at":"2026-09-14T22:12:45.404Z","kind":"run.start","message":"Replay of lookup_member_savings_balance v2","data":{"entrypoint":"http://127.0.0.1:57029/","approvalState":"draft","escalation":false,"inputs":{"operatorId":"op-[REDACTED]","password":"[REDACTED]","memberId":"12345"}}}
-{"seq":1,"at":"2026-09-14T22:12:45.405Z","kind":"policy.decision","message":"Entrypoint allow","data":{"verdict":"allow","rule":"url-allowlist","reason":"http://127.0.0.1:57029/ is permitted."}}
-{"seq":2,"at":"2026-09-14T22:12:45.688Z","kind":"action.start","message":"Step 0: fill","data":{"intent":"Enter the operator ID to sign on","target":"the textbox \"Operator ID\"","reauthentication":"[REDACTED]"}}
-{"seq":3,"at":"2026-09-14T22:12:45.872Z","kind":"policy.decision","message":"fill: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
-{"seq":4,"at":"2026-09-14T22:12:45.983Z","kind":"action.start","message":"Step 1: fill","data":{"intent":"Enter the password to sign on","target":"the textbox \"Password\"","reauthentication":"[REDACTED]"}}
-{"seq":5,"at":"2026-09-14T22:12:46.069Z","kind":"policy.decision","message":"fill: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
-{"seq":6,"at":"2026-09-14T22:12:46.166Z","kind":"action.start","message":"Step 2: click","data":{"intent":"Submit credentials to sign on","target":"the button \"Sign On\"","reauthentication":"[REDACTED]"}}
-{"seq":7,"at":"2026-09-14T22:12:46.256Z","kind":"policy.decision","message":"click: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
-{"seq":8,"at":"2026-09-14T22:12:46.728Z","kind":"action.start","message":"Step 3: fill","data":{"intent":"Enter member ID to look up","target":"the textbox \"Member ID\"","reauthentication":"[REDACTED]"}}
-{"seq":9,"at":"2026-09-14T22:12:46.805Z","kind":"outcome","message":"Business outcome SIGN_ON_FAILED","data":{"code":"SIGN_ON_FAILED","atStep":3,"basis":"text \"Sign-on failed\" is on screen"}}
-{"seq":10,"at":"2026-09-14T22:12:46.806Z","kind":"run.end","message":"Replay business_outcome","data":{"status":"business_outcome","steps":3,"recoveries":0,"drift":0,"interventions":0}}
+{"seq":0,"at":"2026-09-14T23:29:22.155Z","kind":"run.start","message":"Replay of lookup_member_savings_balance v2","data":{"entrypoint":"http://127.0.0.1:61171/","approvalState":"draft","escalation":false,"inputs":{"operatorId":"op-[REDACTED]","password":"[REDACTED]","memberId":"12345"}}}
+{"seq":1,"at":"2026-09-14T23:29:22.156Z","kind":"policy.decision","message":"Entrypoint allow","data":{"verdict":"allow","rule":"url-allowlist","reason":"http://127.0.0.1:61171/ is permitted."}}
+{"seq":2,"at":"2026-09-14T23:29:22.445Z","kind":"action.start","message":"Step 0: fill","data":{"intent":"Enter the operator ID to sign on","target":"the textbox \"Operator ID\"","reauthentication":"[REDACTED]"}}
+{"seq":3,"at":"2026-09-14T23:29:22.536Z","kind":"policy.decision","message":"fill: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
+{"seq":4,"at":"2026-09-14T23:29:22.588Z","kind":"action.start","message":"Step 1: fill","data":{"intent":"Enter the password to sign on","target":"the textbox \"Password\"","reauthentication":"[REDACTED]"}}
+{"seq":5,"at":"2026-09-14T23:29:22.636Z","kind":"policy.decision","message":"fill: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
+{"seq":6,"at":"2026-09-14T23:29:22.680Z","kind":"action.start","message":"Step 2: click","data":{"intent":"Submit credentials to sign on","target":"the button \"Sign On\"","reauthentication":"[REDACTED]"}}
+{"seq":7,"at":"2026-09-14T23:29:22.713Z","kind":"policy.decision","message":"click: allow","data":{"rule":"risk-classification","reason":"Action is reversible and read-only in effect."}}
+{"seq":8,"at":"2026-09-14T23:29:23.083Z","kind":"action.start","message":"Step 3: fill","data":{"intent":"Enter member ID to look up","target":"the textbox \"Member ID\"","reauthentication":"[REDACTED]"}}
+{"seq":9,"at":"2026-09-14T23:29:23.116Z","kind":"outcome","message":"Business outcome SIGN_ON_FAILED","data":{"code":"SIGN_ON_FAILED","atStep":3,"basis":"text \"Sign-on failed\" is on screen"}}
+{"seq":10,"at":"2026-09-14T23:29:23.116Z","kind":"run.end","message":"Replay business_outcome","data":{"status":"business_outcome","steps":3,"recoveries":0,"drift":0,"interventions":0}}

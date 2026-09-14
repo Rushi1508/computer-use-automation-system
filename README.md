@@ -240,6 +240,8 @@ npm run cua -- --help
 
 Every file under `evidence/` comes from a real run of the code in this repository. `npm run scenarios` and `npm run handoff` regenerate their parts. Raw run output goes to `.runs/`, which is not committed.
 
+The demo's data is synthetic, but committed evidence still should not read like a customer record. Before it is committed, member names, branches and account numbers are replaced with markers in text and blacked out in screenshots (`scripts/evidence-redaction.ts`). Balances and member numbers are kept, because they are the outputs and inputs the evidence demonstrates.
+
 ## Tests
 
 ```bash

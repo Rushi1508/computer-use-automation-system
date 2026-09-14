@@ -29,6 +29,7 @@ import { defaultPolicyConfig } from "../src/policy/types.js";
 import { replay, type ReplayResult } from "../src/replay/engine.js";
 import { formatReplayResult } from "../src/replay/format.js";
 import { readCapabilityFile } from "../src/schema/load.js";
+import { redactEvidenceDir, screenshotMask } from "./evidence-redaction.js";
 
 const ROOT = join("evidence", "replay");
 const CAPABILITY_FILE = process.argv[2] ?? join("capabilities", "lookup_member_savings_balance.v2.json");
@@ -205,7 +206,7 @@ async function main(): Promise<number> {
       if (scenario.seedAccount !== undefined) await control(base, "account", scenario.seedAccount);
 
       const evidence = new EvidenceBus(scenario.id, ROOT);
-      const surface = await launchWebSurface({});
+      const surface = await launchWebSurface({ screenshotMask: screenshotMask() });
       let result: ReplayResult;
       try {
         result = await replay({
@@ -248,6 +249,7 @@ async function main(): Promise<number> {
       "",
       `Capability: \`${capability.id}\` v${capability.version}, replayed with no model in the loop.`,
       "Regenerate with `npm run scenarios`.",
+      "Customer names, branches and account numbers from the synthetic dataset are redacted: markers in text, black boxes in screenshots.",
       "",
       "| Scenario | Condition | Status | Result | Recoveries | Elapsed | As expected |",
       "|---|---|---|---|---|---|---|",
@@ -257,6 +259,7 @@ async function main(): Promise<number> {
     "utf8",
   );
 
+  redactEvidenceDir(ROOT);
   process.stdout.write(`\n${SCENARIOS.length - mismatches}/${SCENARIOS.length} scenarios ended as expected.\n`);
   return mismatches === 0 ? 0 : 1;
 }

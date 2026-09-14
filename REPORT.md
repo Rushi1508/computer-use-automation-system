@@ -113,7 +113,7 @@ Replay runs the recorded steps in order with no model. It tries each target's st
 - Errors expose no stack traces or paths, and artifacts hold no values.
 
 **Limits.**
-- Synthetic PII stays readable in evidence and screenshots.
+- The runtime does not redact on-screen customer data. Committed evidence has names, branches and account numbers removed by a publication step over the synthetic dataset, but raw `.runs/` output keeps them.
 - The model sees the credential it types during discovery.
 - An undeclared credential in a goal is on disk until the run ends (the CLI warns).
 - A committing control with no recognised verb is inferred reversible during discovery.
